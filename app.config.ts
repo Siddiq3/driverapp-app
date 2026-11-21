@@ -56,6 +56,14 @@ const config: ExpoConfig = {
       },
     ],
     "@react-native-google-signin/google-signin",
+    [
+      "react-native-google-mobile-ads",
+      {
+        // Google's sample app IDs until your AdMob account is ready
+        androidAppId: process.env.ADMOB_ANDROID_APP_ID ?? "ca-app-pub-3940256099942544~3347511713",
+        iosAppId: process.env.ADMOB_IOS_APP_ID ?? "ca-app-pub-3940256099942544~1458002511",
+      },
+    ],
   ],
   experiments: {
     typedRoutes: false,

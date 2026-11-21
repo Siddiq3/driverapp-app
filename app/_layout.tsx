@@ -4,10 +4,12 @@ import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
 import { useEffect } from "react";
 import { SafeAreaProvider } from "react-native-safe-area-context";
+import { startAds } from "@/components/AdBanner";
 import { AuthProvider, useAuth } from "@/lib/auth";
 import { colors } from "@/theme";
 
 SplashScreen.preventAutoHideAsync().catch(() => undefined);
+startAds();
 
 /** Opens the right screen when someone taps a notification. */
 function NotificationRouter() {
@@ -57,6 +59,7 @@ export default function RootLayout() {
           <Stack.Screen name="search" options={{ animation: "slide_from_bottom" }} />
           <Stack.Screen name="pick-on-map" />
           <Stack.Screen name="ride" />
+          <Stack.Screen name="request" />
           <Stack.Screen name="trip/[id]" options={{ gestureEnabled: false }} />
           <Stack.Screen name="drive/[id]" options={{ gestureEnabled: false }} />
         </Stack>

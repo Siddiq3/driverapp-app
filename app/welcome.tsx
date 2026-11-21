@@ -36,7 +36,7 @@ export default function Welcome() {
         <View style={styles.points}>
           <Point icon="flash" text="No more calling driver after driver" />
           <Point icon="shield-checkmark" text="Every driver is checked by us" />
-          <Point icon="cash" text="Fair price shown before you book" />
+          <Point icon="people" text="See who is free near you, right now" />
         </View>
       </View>
 

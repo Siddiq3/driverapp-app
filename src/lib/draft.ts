@@ -1,6 +1,6 @@
 import AsyncStorage from "@react-native-async-storage/async-storage";
 import { useSyncExternalStore } from "react";
-import type { Place } from "./types";
+import type { FreeDriver, Place } from "./types";
 
 // =============================================================================
 // The booking in progress (pickup + drop), shared by Search → Map pin → Ride.
@@ -67,3 +67,16 @@ export async function saveRecentPlace(place: Place): Promise<void> {
     /* not important */
   }
 }
+
+// =============================================================================
+// The driver a customer tapped in the "free near me" list
+// =============================================================================
+
+
+let chosenDriver: FreeDriver | null = null;
+export const chosen = {
+  set: (d: FreeDriver | null) => {
+    chosenDriver = d;
+  },
+  get: () => chosenDriver,
+};

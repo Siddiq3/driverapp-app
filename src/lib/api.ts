@@ -7,6 +7,7 @@
 import { supabase } from "./supabase";
 import type {
   Driver,
+  FreeDriver,
   DriverPublic,
   DriverStatus,
   Place,
@@ -118,6 +119,12 @@ export async function setAvailability(available: boolean, position?: { lat: numb
   return data as Driver;
 }
 
+/** Driver's own rate shown on their card, e.g. "₹12/km · ₹900/day". */
+export async function setRateNote(note: string) {
+  const { error } = await supabase.rpc("set_driver_rate_note", { p_rate_note: note });
+  if (error) fail(error);
+}
+
 export async function updateLocation(lat: number, lng: number) {
   const { error } = await supabase.rpc("update_driver_location", { p_lat: lat, p_lng: lng });
   if (error) fail(error);
@@ -157,6 +164,22 @@ export async function getNearbyDrivers(lat: number, lng: number, radiusKm = 5): 
   return (data ?? []) as NearbyDriver[];
 }
 
+/** Free drivers near the customer, nearest first. kind: "car" = has a car, "driver" = anyone who drives. */
+export async function getFreeDrivers(lat: number, lng: number, kind: "car" | "driver" | null = null, radiusKm = 10): Promise<FreeDriver[]> {
+  const { data, error } = await supabase.rpc("free_drivers_near", {
+    p_lat: lat,
+    p_lng: lng,
+    p_radius_km: radiusKm,
+    p_kind: kind,
+  });
+  if (error) fail(error);
+  return ((data ?? []) as FreeDriver[]).map((d) => ({
+    ...d,
+    rating_avg: Number(d.rating_avg),
+    distance_km: Number(d.distance_km),
+  }));
+}
+
 // ---------------------------------------------------------------------------
 // Customer: booking
 // ---------------------------------------------------------------------------
@@ -169,6 +192,8 @@ export async function requestTrip(args: {
   drop: Place | null;
   hours: number | null;
   note: string;
+  /** Send only to this driver (picked from the "free near me" list). */
+  driverId?: string | null;
 }): Promise<{ trip_id: string; drivers_notified: number }> {
   return tripAction("request", {
     service: args.service,
@@ -182,6 +207,7 @@ export async function requestTrip(args: {
     drop_lng: args.drop?.lng ?? null,
     hours: args.hours,
     note: args.note,
+    driver_id: args.driverId ?? null,
   });
 }
 

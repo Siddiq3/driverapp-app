@@ -7,11 +7,11 @@ import { Button, IconButton } from "@/components/Button";
 import { Map } from "@/components/Map";
 import { Loading } from "@/components/Screen";
 import { BottomSheet } from "@/components/Sheet";
-import { Avatar, InfoRow, Route, Stars } from "@/components/TripBits";
+import { Avatar, Route, Stars } from "@/components/TripBits";
 import { callNumber, confirm, navigateTo, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useOnAppActive } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { Trip, TripPerson } from "@/lib/types";
@@ -142,7 +142,6 @@ export default function DriverTrip() {
               <Text style={font.heading}>
                 {trip.status === "accepted" ? "Go to pickup" : trip.status === "arrived" ? "Waiting for customer" : "On trip"}
               </Text>
-              <Text style={styles.fare}>{rupees(trip.fare_estimate)}</Text>
             </View>
             <Text style={[font.small, { marginBottom: space.md }]}>
               {[
@@ -159,7 +158,7 @@ export default function DriverTrip() {
               <Avatar name={customer?.full_name} url={customer?.avatar_url} size={52} />
               <View style={{ flex: 1 }}>
                 <Text style={font.subheading}>{customer?.full_name ?? "Customer"}</Text>
-                <Text style={font.small}>Collect {rupees(trip.fare_estimate)} by cash or UPI</Text>
+                <Text style={font.small}>Call to agree on price and time</Text>
               </View>
               <IconButton icon="call" label="Call customer" background={colors.black} color={colors.white} size={52} onPress={() => callNumber(customer?.phone)} />
             </View>
@@ -285,7 +284,7 @@ function RateCustomer({ trip, customer }: { trip: Trip; customer: TripPerson | n
         <Ionicons name="checkmark" size={36} color={colors.white} />
       </View>
       <Text style={[font.heading, { textAlign: "center" }]}>Trip completed</Text>
-      <InfoRow icon="cash-outline" label="Collect from customer" value={rupees(trip.fare_estimate)} />
+      <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>Collect the agreed price by cash or UPI.</Text>
 
       {done === false && (
         <>

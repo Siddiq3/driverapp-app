@@ -65,13 +65,14 @@ export function Account({ mode }: { mode: UserRole }) {
                 : "Driving only (no own car)"}
             </Text>
             <Text style={[font.small, { marginTop: 4 }]}>Licence: {driver.licence_number}</Text>
+            <Text style={[font.small, { marginTop: 4 }]}>Your rate: {driver.rate_note ?? "not set"}</Text>
           </View>
         </>
       )}
 
       <SectionLabel>Settings</SectionLabel>
       <Row icon="create-outline" label="Edit name and phone" onPress={() => router.push("/setup?edit=1")} />
-      {mode === "driver" && <Row icon="car-outline" label="Edit car / licence details" onPress={() => router.push("/driver-register")} />}
+      {mode === "driver" && <Row icon="car-outline" label="Edit car, licence or rate" onPress={() => router.push("/driver-register")} />}
       <Row
         icon="swap-horizontal"
         label={mode === "driver" ? "Switch to booking trips" : "Switch to driver mode"}

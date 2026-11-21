@@ -9,10 +9,12 @@ import { Map } from "@/components/Map";
 import { Pulse } from "@/components/Pulse";
 import { Loading } from "@/components/Screen";
 import { BottomSheet } from "@/components/Sheet";
+import { AdBanner } from "@/components/AdBanner";
 import { Avatar, InfoRow, RatingText, Route, Stars } from "@/components/TripBits";
+import { chosen } from "@/lib/draft";
 import { callNumber, confirm, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
-import { mmss, rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { firstName, mmss, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useOnAppActive, useSecondsLeft } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { DriverPublic, Trip } from "@/lib/types";
@@ -85,6 +87,9 @@ export default function CustomerTrip() {
 // ---------------------------------------------------------------------------
 
 function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void }) {
+  const direct = !!trip.requested_driver_id;
+  const picked = chosen.get();
+  const directName = picked && picked.id === trip.requested_driver_id ? firstName(picked.full_name) : "the driver";
   const left = useSecondsLeft(trip.expires_at);
   const [cancelling, setCancelling] = useState(false);
   const widening = useRef(false);
@@ -119,9 +124,11 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
   return (
     <View>
       <Pulse icon={trip.service_type === "driver_only" ? "person" : "car"} />
-      <Text style={[font.heading, styles.centerText]}>Finding a driver near you</Text>
+      <Text style={[font.heading, styles.centerText]}>
+        {direct ? `Waiting for ${directName} to accept` : "Finding a driver near you"}
+      </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>
-        Looking within {trip.search_radius_km} km · {mmss(left)}
+        {direct ? mmss(left) : `Looking within ${trip.search_radius_km} km · ${mmss(left)}`}
       </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>
         You can close the app. We will notify you.
@@ -130,6 +137,7 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
       <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? `${trip.hours} hours` : undefined} />
       <View style={{ height: space.xl }} />
       <Button title="Cancel request" variant="secondary" onPress={cancel} loading={cancelling} />
+      <AdBanner />
     </View>
   );
 }
@@ -201,8 +209,10 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
     <View>
       <View style={styles.statusRow}>
         <Text style={font.heading}>{headline}</Text>
-        <Text style={styles.fare}>{rupees(trip.fare_estimate)}</Text>
       </View>
+      {trip.status === "accepted" && (
+        <Text style={[font.small, { marginBottom: space.sm }]}>Call your driver to agree on the price and time.</Text>
+      )}
       {trip.status === "arrived" && (
         <Text style={[font.small, { marginBottom: space.md }]}>Please meet your driver at the pickup point.</Text>
       )}
@@ -282,8 +292,7 @@ function Completed({ trip, driver }: { trip: Trip; driver: DriverPublic | null }
         <Ionicons name="checkmark" size={36} color={colors.white} />
       </View>
       <Text style={[font.heading, styles.centerText]}>Trip completed</Text>
-      <Text style={[font.price, styles.centerText, { marginTop: space.sm }]}>{rupees(trip.fare_estimate)}</Text>
-      <Text style={[font.small, styles.centerText]}>Pay your driver by cash or UPI</Text>
+      <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>Pay your driver the agreed price by cash or UPI.</Text>
 
       <InfoRow icon="car-outline" label="Trip" value={`${SERVICE_LABEL[trip.service_type]} · ${TRIP_LABEL[trip.trip_type]}`} />
 
@@ -310,6 +319,7 @@ function Completed({ trip, driver }: { trip: Trip; driver: DriverPublic | null }
 
 function Ended({ trip }: { trip: Trip }) {
   const expired = trip.status === "expired";
+  const direct = !!trip.requested_driver_id;
   const byDriver = trip.status === "cancelled" && trip.cancelled_by === trip.driver_id;
   return (
     <View>
@@ -317,21 +327,19 @@ function Ended({ trip }: { trip: Trip }) {
         <Ionicons name={expired ? "time-outline" : "close"} size={36} color={colors.black} />
       </View>
       <Text style={[font.heading, styles.centerText]}>
-        {expired ? "No driver free right now" : byDriver ? "Driver cancelled" : "Trip cancelled"}
+        {expired ? (direct ? "The driver didn't answer" : "No driver free right now") : byDriver ? "Driver cancelled" : "Trip cancelled"}
       </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.sm }]}>
         {expired
-          ? "All drivers near you are busy. Please try again in a few minutes."
+          ? direct
+            ? "They may be driving. Please choose another free driver."
+            : "All drivers near you are busy. Please try again in a few minutes."
           : byDriver
-            ? "Sorry about that. Please book again — we will find another driver."
+            ? "Sorry about that. Please choose another driver."
             : "This trip was cancelled."}
       </Text>
-      <Button
-        title="Book again"
-        onPress={() => router.replace(`/search?service=${trip.service_type}`)}
-        style={{ marginTop: space.xl }}
-      />
-      <Button title="Go home" variant="ghost" size="md" onPress={() => router.replace("/customer/home")} />
+      <Button title="Choose another driver" onPress={() => router.replace("/customer/home")} style={{ marginTop: space.xl }} />
+      <AdBanner />
     </View>
   );
 }

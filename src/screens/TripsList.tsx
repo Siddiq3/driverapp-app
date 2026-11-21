@@ -2,11 +2,12 @@ import { router, useFocusEffect } from "expo-router";
 import { useCallback, useState } from "react";
 import { FlatList, Pressable, RefreshControl, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AdBanner } from "@/components/AdBanner";
 import { Button } from "@/components/Button";
 import { EmptyState, Loading } from "@/components/Screen";
 import { Route, StatusBadge } from "@/components/TripBits";
 import * as api from "@/lib/api";
-import { dateTime, rupees, SERVICE_LABEL, TRIP_LABEL } from "@/lib/format";
+import { dateTime, SERVICE_LABEL, TRIP_LABEL } from "@/lib/format";
 import { ACTIVE_STATUSES, type Trip, type UserRole } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
 
@@ -66,6 +67,7 @@ export function TripsList({ mode }: { mode: UserRole }) {
           )
         }
         ItemSeparatorComponent={() => <View style={{ height: space.md }} />}
+        ListFooterComponent={mode === "customer" ? <AdBanner /> : null}
         renderItem={({ item: t }) => (
           <Pressable
             accessibilityRole="button"
@@ -79,7 +81,6 @@ export function TripsList({ mode }: { mode: UserRole }) {
                 </Text>
                 <Text style={font.small}>{dateTime(t.created_at)}</Text>
               </View>
-              <Text style={styles.price}>{rupees(t.fare_estimate)}</Text>
             </View>
             <Route pickup={t.pickup_address} drop={t.drop_address} dropFallback={t.hours ? `${t.hours} hours` : undefined} />
             <View style={{ marginTop: space.md, flexDirection: "row", alignItems: "center", gap: space.sm }}>

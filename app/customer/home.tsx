@@ -1,38 +1,43 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useFocusEffect } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { AdBanner } from "@/components/AdBanner";
 import { IconButton } from "@/components/Button";
+import { Segmented } from "@/components/Choice";
+import { FreeDriverCard } from "@/components/FreeDriverCard";
 import { Map } from "@/components/Map";
 import { BottomSheet } from "@/components/Sheet";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { bookingDraft, getRecentPlaces } from "@/lib/draft";
+import { bookingDraft, chosen } from "@/lib/draft";
 import { firstName, STATUS_LABEL } from "@/lib/format";
 import { useForegroundInterval } from "@/lib/hooks";
 import { addressFor, getCurrentPosition, LocationError } from "@/lib/location";
-import type { LatLng, Place, Trip } from "@/lib/types";
+import type { FreeDriver, LatLng, Trip } from "@/lib/types";
 import { colors, font, radius, shadow, space } from "@/theme";
 
+type Kind = "car" | "driver";
+
 /**
- * Customer home, like Uber / Rapido:
- * map with free drivers · "Where to?" · recent places · Ride / Rental / Driver.
+ * Customer home: who is FREE near me right now.
+ * Pick a car or a driver from the list and send them a request.
  */
 export default function CustomerHome() {
   const { profile } = useAuth();
   const [here, setHere] = useState<LatLng | null>(null);
   const [locError, setLocError] = useState<string | null>(null);
   const [active, setActive] = useState<Trip | null>(null);
-  const [nearby, setNearby] = useState<api.NearbyDriver[] | null>(null);
-  const [recents, setRecents] = useState<Place[]>([]);
+  const [kind, setKind] = useState<Kind>("car");
+  const [list, setList] = useState<FreeDriver[] | null>(null);
+  const [markers, setMarkers] = useState<api.NearbyDriver[]>([]);
 
   const locate = useCallback(async () => {
     try {
       setLocError(null);
       const pos = await getCurrentPosition();
       setHere(pos);
-      // Pickup defaults to where the customer is now
       const address = await addressFor(pos);
       bookingDraft.setPickup({ ...pos, address });
     } catch (err) {
@@ -44,35 +49,39 @@ export default function CustomerHome() {
     useCallback(() => {
       locate();
       bookingDraft.reset();
-      getRecentPlaces().then((r) => setRecents(r.slice(0, 3)));
       api.getMyActiveTrip("customer").then(setActive).catch(() => setActive(null));
     }, [locate]),
   );
 
-  const loadNearby = useCallback(async (pos: LatLng | null) => {
-    if (!pos) return;
+  const loadFree = useCallback(async () => {
+    if (!here) return;
     try {
-      setNearby(await api.getNearbyDrivers(pos.lat, pos.lng, 5));
+      const [people, dots] = await Promise.all([
+        api.getFreeDrivers(here.lat, here.lng, kind, 10),
+        api.getNearbyDrivers(here.lat, here.lng, 10),
+      ]);
+      setList(people);
+      setMarkers(kind === "car" ? dots.filter((d) => d.has_car) : dots);
     } catch {
       /* keep the last list */
     }
-  }, []);
+  }, [here, kind]);
 
   useEffect(() => {
-    loadNearby(here);
-  }, [here, loadNearby]);
-  useForegroundInterval(() => loadNearby(here), 30_000, !!here && !active);
+    setList(null);
+    loadFree();
+  }, [loadFree]);
+  // Drivers go free and busy all the time: refresh every 30 seconds.
+  useForegroundInterval(loadFree, 30_000, !!here && !active);
 
-  const goTo = (place: Place) => {
-    bookingDraft.setDrop(place);
-    router.push("/ride");
+  const openDriver = (d: FreeDriver) => {
+    chosen.set(d);
+    router.push(`/request?kind=${kind}`);
   };
-
-  const free = nearby?.length ?? 0;
 
   return (
     <View style={{ flex: 1 }}>
-      <Map center={here} bottomInset={420} nearby={active ? undefined : nearby ?? undefined} />
+      <Map center={here} bottomInset={480} nearby={active ? undefined : markers} />
 
       <SafeAreaView edges={["top"]} style={styles.top} pointerEvents="box-none">
         <View style={styles.hello}>
@@ -81,7 +90,7 @@ export default function CustomerHome() {
         <IconButton icon="locate" label="Show my location" onPress={locate} background={colors.white} />
       </SafeAreaView>
 
-      <BottomSheet>
+      <BottomSheet style={{ maxHeight: "64%" }}>
         {active ? (
           <Pressable style={styles.active} onPress={() => router.push(`/trip/${active.id}`)} accessibilityRole="button">
             <View style={styles.activeDot} />
@@ -93,60 +102,53 @@ export default function CustomerHome() {
           </Pressable>
         ) : (
           <>
-            {/* Where to? */}
-            <Pressable
-              accessibilityRole="search"
-              accessibilityLabel="Where are you going?"
-              onPress={() => router.push("/search")}
-              style={({ pressed }) => [styles.whereTo, pressed && { backgroundColor: colors.surfacePressed }]}
-            >
-              <Ionicons name="search" size={24} color={colors.black} />
-              <Text style={styles.whereText}>Where are you going?</Text>
-              <View style={styles.nowPill}>
-                <Ionicons name="time" size={14} color={colors.black} />
-                <Text style={styles.nowText}>Now</Text>
-              </View>
-            </Pressable>
+            <Segmented
+              value={kind}
+              onChange={setKind}
+              options={[
+                { value: "car", label: "🚗  Car + driver" },
+                { value: "driver", label: "🧑  Driver only" },
+              ]}
+            />
 
-            {/* Recent places */}
-            {recents.map((p) => (
-              <Pressable
-                key={`${p.lat},${p.lng}`}
-                onPress={() => goTo(p)}
-                accessibilityRole="button"
-                style={({ pressed }) => [styles.recent, pressed && { backgroundColor: colors.surface }]}
-              >
-                <View style={styles.recentIcon}>
-                  <Ionicons name="time-outline" size={20} color={colors.black} />
-                </View>
-                <Text style={styles.recentText} numberOfLines={1}>
-                  {p.address}
-                </Text>
-                <Ionicons name="chevron-forward" size={18} color={colors.textFaint} />
-              </Pressable>
-            ))}
-
-            {/* Services */}
-            <View style={styles.services}>
-              <Service icon="car-sport" label="Car + driver" hint="We send a car" onPress={() => router.push("/search")} />
-              <Service
-                icon="person"
-                label="Driver only"
-                hint="For your own car"
-                onPress={() => router.push("/search?service=driver_only")}
-              />
-            </View>
-
-            <View style={styles.nearbyRow}>
-              <View style={[styles.liveDot, { backgroundColor: free > 0 ? colors.green : colors.textFaint }]} />
-              <Text style={font.small}>
-                {nearby == null
-                  ? "Checking for drivers near you…"
-                  : free > 0
-                    ? `${free} driver${free > 1 ? "s" : ""} free near you`
-                    : "No free drivers close by now. You can still book."}
+            <View style={styles.listHead}>
+              <View style={[styles.liveDot, { backgroundColor: (list?.length ?? 0) > 0 ? colors.green : colors.textFaint }]} />
+              <Text style={font.bodyStrong}>
+                {list == null ? "Checking who is free…" : `${list.length} free near you`}
               </Text>
+              {list == null && <ActivityIndicator color={colors.black} />}
             </View>
+
+            <ScrollView style={{ flexGrow: 0 }} showsVerticalScrollIndicator={false}>
+              {list?.map((d) => <FreeDriverCard key={d.id} driver={d} onPress={() => openDriver(d)} />)}
+
+              {list && list.length === 0 && (
+                <View style={styles.empty}>
+                  <Text style={[font.body, { textAlign: "center" }]}>
+                    No {kind === "car" ? "cars" : "drivers"} are free within 10 km right now.
+                  </Text>
+                  <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>
+                    Try again in a few minutes, or send a request to everyone nearby.
+                  </Text>
+                </View>
+              )}
+
+              {/* Send to everyone nearby (first to accept) */}
+              <Pressable
+                accessibilityRole="button"
+                onPress={() => router.push(kind === "driver" ? "/search?service=driver_only" : "/search")}
+                style={({ pressed }) => [styles.everyone, pressed && { backgroundColor: colors.surfacePressed }]}
+              >
+                <Ionicons name="megaphone-outline" size={22} color={colors.black} />
+                <View style={{ flex: 1 }}>
+                  <Text style={font.bodyStrong}>Ask everyone nearby</Text>
+                  <Text style={font.tiny}>Your request goes to all free {kind === "car" ? "cars" : "drivers"}. First to accept comes.</Text>
+                </View>
+                <Ionicons name="chevron-forward" size={20} color={colors.textFaint} />
+              </Pressable>
+
+              <AdBanner />
+            </ScrollView>
           </>
         )}
 
@@ -158,31 +160,6 @@ export default function CustomerHome() {
         )}
       </BottomSheet>
     </View>
-  );
-}
-
-function Service({
-  icon,
-  label,
-  hint,
-  onPress,
-}: {
-  icon: keyof typeof Ionicons.glyphMap;
-  label: string;
-  hint?: string;
-  onPress: () => void;
-}) {
-  return (
-    <Pressable
-      accessibilityRole="button"
-      accessibilityLabel={hint ? `${label}, ${hint}` : label}
-      onPress={onPress}
-      style={({ pressed }) => [styles.service, pressed && { backgroundColor: colors.surfacePressed }]}
-    >
-      <Ionicons name={icon} size={30} color={colors.black} />
-      <Text style={styles.serviceLabel}>{label}</Text>
-      {hint && <Text style={styles.serviceHint}>{hint}</Text>}
-    </Pressable>
   );
 }
 
@@ -206,58 +183,18 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   helloText: { fontSize: 17, fontWeight: "700", color: colors.text },
-  whereTo: {
+  listHead: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.lg, marginBottom: space.xs },
+  liveDot: { width: 10, height: 10, borderRadius: 5 },
+  empty: { paddingVertical: space.xl, paddingHorizontal: space.md },
+  everyone: {
     flexDirection: "row",
     alignItems: "center",
     gap: space.md,
-    backgroundColor: colors.surface,
-    borderRadius: radius.pill,
-    paddingHorizontal: space.lg,
-    minHeight: 60,
-    marginBottom: space.sm,
-  },
-  whereText: { flex: 1, fontSize: 19, fontWeight: "700", color: colors.text },
-  nowPill: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 4,
-    backgroundColor: colors.white,
-    borderRadius: radius.pill,
-    paddingHorizontal: space.md,
-    paddingVertical: 6,
-  },
-  nowText: { fontSize: 14, fontWeight: "700", color: colors.text },
-  recent: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: space.md,
-    minHeight: 52,
-    borderRadius: radius.sm,
-    paddingHorizontal: 4,
-  },
-  recentIcon: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.surface,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  recentText: { flex: 1, fontSize: 16, color: colors.text },
-  services: { flexDirection: "row", gap: space.sm, marginTop: space.md },
-  service: {
-    flex: 1,
-    alignItems: "center",
     backgroundColor: colors.surface,
     borderRadius: radius.md,
-    paddingVertical: space.md,
-    minHeight: 92,
-    justifyContent: "center",
+    padding: space.lg,
+    marginTop: space.md,
   },
-  serviceLabel: { fontSize: 16, fontWeight: "700", color: colors.text, marginTop: 6 },
-  serviceHint: { fontSize: 12, color: colors.textMuted },
-  nearbyRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.lg },
-  liveDot: { width: 10, height: 10, borderRadius: 5 },
   active: {
     flexDirection: "row",
     alignItems: "center",

@@ -20,6 +20,7 @@ export default function DriverRegister() {
   const [model, setModel] = useState(driver?.vehicle_model ?? "");
   const [number, setNumber] = useState(driver?.vehicle_number ?? "");
   const [licence, setLicence] = useState(driver?.licence_number ?? "");
+  const [rate, setRate] = useState(driver?.rate_note ?? "");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
 
@@ -41,6 +42,7 @@ export default function DriverRegister() {
         vehicleNumber: number,
         licenceNumber: licence,
       });
+      await api.setRateNote(rate);
       await refresh();
       router.replace("/driver-pending");
     } catch (err) {
@@ -107,6 +109,16 @@ export default function DriverRegister() {
           />
         </View>
       )}
+
+      <Field
+        label="Your rate (optional)"
+        icon="pricetag-outline"
+        value={rate}
+        onChangeText={setRate}
+        placeholder={hasCar === "yes" ? "e.g. ₹12/km · ₹2000/day" : "e.g. ₹150/hour · ₹800/day"}
+        maxLength={80}
+        hint="Customers see this on your card. You still agree the final price on call."
+      />
 
       <Text style={[font.small, { marginTop: space.md }]}>
         Our team may call you to see your licence{hasCar === "yes" ? ", RC and insurance" : ""} before approving.

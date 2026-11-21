@@ -6,15 +6,18 @@ Backend: [driverapp-backend](https://github.com/Siddiq3/driverapp-backend) (Supa
 
 ## What's inside
 
-| Customer (Uber / Rapido look, kept simple) | Driver |
+**v1 idea:** in small towns people call driver after driver to find one who is free. Here they **see who is free near them** and send a request. Price is agreed on the phone. **Free for everyone; v1 earns from ads.**
+
+| Customer | Driver |
 | --- | --- |
-| Google login → allow location → name + phone | Register licence (+ car details if they have a car) |
-| Home: map with free drivers, **Where are you going?**, recent places | Wait for approval (checked by admin) |
-| Two big buttons: **Car + driver** · **Driver only** | Big **Go free / Go busy** switch |
-| Search as you type, recent places, **choose on map**, or **book by hours** (no drop) | Loud push + full-screen request card with 2-min timer |
-| Choose ride: Mini / Sedan / SUV / Driver only, with price and "3 min away" | First to accept gets the trip |
-| Live status, driver card, **4-digit ride PIN**, call, share, SOS | Enter the customer's PIN to start the trip |
-| Pay driver by cash / UPI, rate the driver | Navigate in Google Maps, complete, rate customer, go free again |
+| Google login → allow location → name + phone | Register licence (+ car details) and an optional rate, e.g. "₹12/km" |
+| Home: map + list of **free cars / free drivers near me** (name, rating, car, km, rate) | Wait for approval (checked by admin) |
+| Tap one → **Send request** (pickup, where to, when — all optional) | Big **Go free / Go busy** switch |
+| Or **Ask everyone nearby** — first free driver to accept comes | Loud push + full-screen request ("A customer chose you!") |
+| Driver accepts → call each other, agree price, **4-digit ride PIN** | Accept → call customer → enter PIN to start → complete |
+| Pay the driver directly (cash / UPI), rate the driver | Rate customer, go free again |
+
+Ads: Google AdMob banners on customer screens only (test ads until your IDs are in `.env`).
 
 Design: clean black-and-white, large text and buttons, very few words per screen, so first-time smartphone users in small towns can follow it.
 
@@ -27,7 +30,8 @@ app/                    screens (expo-router: file = screen)
   driver/               tabs: home · trips · account
   search.tsx            "Where to?" with suggestions + recent places
   pick-on-map.tsx       choose a place by moving the map
-  ride.tsx              choose Mini / Sedan / SUV / Driver only, then book
+  request.tsx           send a request to the driver picked from the list
+  ride.tsx              "ask everyone nearby": choose Mini / Sedan / SUV / Driver only
   trip/[id].tsx         customer's live trip
   drive/[id].tsx        driver's live trip
 src/

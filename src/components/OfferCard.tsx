@@ -4,12 +4,12 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Button } from "@/components/Button";
 import { Route } from "@/components/TripBits";
-import { mmss, rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { mmss, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useSecondsLeft } from "@/lib/hooks";
 import type { Trip } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
 
-/** Full-screen new trip request for drivers: big price, where, Accept / Skip. */
+/** Full-screen new trip request for drivers: what, where, Accept / Skip. */
 export function OfferCard({
   trip,
   distanceKm,
@@ -48,15 +48,16 @@ export function OfferCard({
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <View style={styles.headRow}>
-            <Text style={styles.newLabel}>NEW TRIP</Text>
+            <Text style={styles.newLabel}>{trip.requested_driver_id ? "A CUSTOMER CHOSE YOU" : "NEW TRIP"}</Text>
             <View style={styles.timer}>
               <Ionicons name="time-outline" size={16} color={colors.white} />
               <Text style={styles.timerText}>{mmss(left)}</Text>
             </View>
           </View>
 
-          <Text style={styles.price}>{rupees(trip.fare_estimate)}</Text>
-          <Text style={font.small}>{details.join(" · ")}</Text>
+          <Text style={styles.price}>{details.slice(0, 2).join(" · ")}</Text>
+          {details.length > 2 && <Text style={font.small}>{details.slice(2).join(" · ")}</Text>}
+          <Text style={[font.small, { marginTop: 4 }]}>Price: agree with the customer on call</Text>
 
           <View style={styles.away}>
             <Ionicons name="navigate" size={20} color={colors.black} />
@@ -103,7 +104,7 @@ const styles = StyleSheet.create({
     paddingVertical: 6,
   },
   timerText: { color: colors.white, fontWeight: "700", fontSize: 15 },
-  price: { fontSize: 44, fontWeight: "800", color: colors.text },
+  price: { fontSize: 28, fontWeight: "800", color: colors.text },
   away: {
     flexDirection: "row",
     alignItems: "center",

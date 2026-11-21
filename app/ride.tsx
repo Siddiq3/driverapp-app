@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useEffect, useMemo, useState } from "react";
-import { ActivityIndicator, Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
+import { Pressable, ScrollView, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, IconButton } from "@/components/Button";
 import { Stepper } from "@/components/Choice";
@@ -10,7 +10,7 @@ import { BottomSheet } from "@/components/Sheet";
 import { showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { useBookingDraft } from "@/lib/draft";
-import { rupees, VEHICLE_HINT } from "@/lib/format";
+import { VEHICLE_HINT } from "@/lib/format";
 import { distanceKm, roadKm } from "@/lib/location";
 import type { ServiceType, TripType, VehicleType } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
@@ -41,7 +41,7 @@ const DRIVER_OPTION: Option = {
   icon: "person-outline",
 };
 
-/** Choose a ride (Mini / Sedan / SUV / Driver only) with price and pickup time, then book. */
+/** Choose Mini / Sedan / SUV / Driver only, then send the request to everyone free nearby. */
 export default function Ride() {
   const params = useLocalSearchParams<{ service?: string }>();
   const onlyDriver = params.service === "driver_only";
@@ -56,8 +56,6 @@ export default function Ride() {
 
   const [selected, setSelected] = useState<OptionKey>(onlyDriver ? "driver" : "hatchback");
   const [hours, setHours] = useState(() => (km ? Math.min(Math.max(Math.ceil(km / 30) + 2, 2), 24) : 4));
-  const [fares, setFares] = useState<Partial<Record<OptionKey, number>>>({});
-  const [loadingFares, setLoadingFares] = useState(true);
   const [nearby, setNearby] = useState<api.NearbyDriver[] | null>(null);
   const [note, setNote] = useState("");
   const [showNote, setShowNote] = useState(false);
@@ -69,31 +67,6 @@ export default function Ride() {
     api.getNearbyDrivers(pickup.lat, pickup.lng, 10).then(setNearby).catch(() => setNearby([]));
   }, [pickup?.lat, pickup?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Prices for every option
-  useEffect(() => {
-    let alive = true;
-    setLoadingFares(true);
-    Promise.all(
-      options.map((o) =>
-        api
-          .estimateFare({
-            service: o.service,
-            tripType,
-            vehicle: o.vehicle,
-            distanceKm: km,
-            hours: needsHours(o) ? hours : null,
-          })
-          .then((f) => [o.key, f] as const)
-          .catch(() => [o.key, undefined] as const),
-      ),
-    )
-      .then((pairs) => alive && setFares(Object.fromEntries(pairs.filter(([, f]) => f != null))))
-      .finally(() => alive && setLoadingFares(false));
-    return () => {
-      alive = false;
-    };
-  }, [km, tripType, hours]); // eslint-disable-line react-hooks/exhaustive-deps
-
   const etaFor = (o: Option): string => {
     if (!pickup || nearby == null) return "";
     const matching = nearby.filter((d) => (o.service === "driver_only" ? true : d.has_car && d.vehicle_type === o.vehicle));
@@ -104,7 +77,6 @@ export default function Ride() {
   };
 
   const chosen = options.find((o) => o.key === selected) ?? options[0];
-  const price = fares[chosen.key];
 
   if (!pickup) {
     return (
@@ -179,11 +151,7 @@ export default function Ride() {
                     {o.hint}
                   </Text>
                 </View>
-                {loadingFares ? (
-                  <ActivityIndicator color={colors.black} />
-                ) : (
-                  <Text style={styles.optionPrice}>{rupees(fares[o.key])}</Text>
-                )}
+                {active && <Ionicons name="checkmark-circle" size={26} color={colors.black} />}
               </Pressable>
             );
           })}
@@ -199,9 +167,8 @@ export default function Ride() {
 
           {/* Payment */}
           <View style={styles.payRow}>
-            <Ionicons name="cash-outline" size={22} color={colors.green} />
-            <Text style={[font.bodyStrong, { flex: 1 }]}>Cash / UPI</Text>
-            <Text style={font.small}>Pay driver after trip</Text>
+            <Ionicons name="call-outline" size={22} color={colors.green} />
+            <Text style={[font.small, { flex: 1 }]}>Agree the price with the driver on call. Pay by cash or UPI.</Text>
           </View>
 
           {/* Note */}
@@ -224,10 +191,9 @@ export default function Ride() {
         </ScrollView>
 
         <Button
-          title={price != null ? `Book ${chosen.title} · ${rupees(price)}` : `Book ${chosen.title}`}
+          title={`Send to all free ${chosen.service === "driver_only" ? "drivers" : chosen.title + "s"}`}
           onPress={book}
           loading={booking}
-          disabled={price == null || loadingFares}
           style={{ marginTop: space.md }}
         />
       </BottomSheet>
@@ -270,7 +236,6 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   optionTitle: { fontSize: 18, fontWeight: "800", color: colors.text },
-  optionPrice: { fontSize: 19, fontWeight: "800", color: colors.text },
   payRow: {
     flexDirection: "row",
     alignItems: "center",

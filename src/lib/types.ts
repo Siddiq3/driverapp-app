@@ -37,6 +37,7 @@ export type Driver = {
   rating_avg: number;
   rating_count: number;
   missed_streak: number;
+  rate_note: string | null;
 };
 
 export type Trip = {
@@ -56,6 +57,7 @@ export type Trip = {
   hours: number | null;
   fare_estimate: number;
   customer_note: string | null;
+  requested_driver_id: string | null;
   status: TripStatus;
   search_radius_km: number;
   expires_at: string;
@@ -91,6 +93,20 @@ export type DriverPublic = TripPerson & {
   has_car: boolean;
   rating_avg: number;
   rating_count: number;
+};
+
+/** A free driver in the customer's "near me" list (no phone until they accept). */
+export type FreeDriver = {
+  id: string;
+  full_name: string | null;
+  avatar_url: string | null;
+  has_car: boolean;
+  vehicle_type: VehicleType | null;
+  vehicle_model: string | null;
+  rating_avg: number;
+  rating_count: number;
+  rate_note: string | null;
+  distance_km: number;
 };
 
 export type LatLng = { lat: number; lng: number };
