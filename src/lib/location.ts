@@ -1,0 +1,91 @@
+import * as Location from "expo-location";
+import type { LatLng, Place } from "./types";
+
+export class LocationError extends Error {}
+
+/** Asks for permission (once) and returns the phone's current position. */
+export async function getCurrentPosition(): Promise<LatLng> {
+  const { status } = await Location.requestForegroundPermissionsAsync();
+  if (status !== "granted") {
+    throw new LocationError("Please allow location so we can find drivers near you.");
+  }
+  const servicesOn = await Location.hasServicesEnabledAsync();
+  if (!servicesOn) {
+    throw new LocationError("Please turn on Location (GPS) in your phone settings.");
+  }
+
+  // Use a recent cached fix first for speed, then a fresh one.
+  const last = await Location.getLastKnownPositionAsync({ maxAge: 60_000, requiredAccuracy: 200 });
+  if (last) return { lat: last.coords.latitude, lng: last.coords.longitude };
+
+  const pos = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
+  return { lat: pos.coords.latitude, lng: pos.coords.longitude };
+}
+
+/** Short readable address for a position, using the phone's free built-in geocoder. */
+export async function addressFor(pos: LatLng): Promise<string> {
+  try {
+    const [r] = await Location.reverseGeocodeAsync({ latitude: pos.lat, longitude: pos.lng });
+    if (!r) return "Current location";
+    const parts = [r.name !== r.street ? r.name : null, r.street, r.district ?? r.subregion, r.city]
+      .filter((p): p is string => !!p && p.trim().length > 0 && !/^\d+$/.test(p));
+    const unique = parts.filter((p, i) => parts.indexOf(p) === i);
+    return unique.slice(0, 3).join(", ") || "Current location";
+  } catch {
+    return "Current location";
+  }
+}
+
+/** Finds a typed place (e.g. "Bus stand, Guntur"). Uses the phone's free geocoder. */
+export async function searchPlace(query: string, near?: LatLng): Promise<Place | null> {
+  const q = query.trim();
+  if (q.length < 3) return null;
+
+  // Adding the user's city helps the geocoder find small local places.
+  let city = "";
+  if (near) {
+    try {
+      const [r] = await Location.reverseGeocodeAsync({ latitude: near.lat, longitude: near.lng });
+      city = r?.city ?? r?.subregion ?? "";
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const tries = city && !q.toLowerCase().includes(city.toLowerCase()) ? [`${q}, ${city}`, q] : [q];
+  for (const attempt of tries) {
+    try {
+      const results = await Location.geocodeAsync(attempt);
+      if (results.length > 0) {
+        const best = near ? closest(results.map((r) => ({ lat: r.latitude, lng: r.longitude })), near) : {
+          lat: results[0].latitude,
+          lng: results[0].longitude,
+        };
+        return { ...best, address: q };
+      }
+    } catch {
+      /* try next */
+    }
+  }
+  return null;
+}
+
+function closest(points: LatLng[], to: LatLng): LatLng {
+  return points.reduce((best, p) => (distanceKm(p, to) < distanceKm(best, to) ? p : best), points[0]);
+}
+
+/** Straight-line distance in km. */
+export function distanceKm(a: LatLng, b: LatLng): number {
+  const R = 6371;
+  const dLat = ((b.lat - a.lat) * Math.PI) / 180;
+  const dLng = ((b.lng - a.lng) * Math.PI) / 180;
+  const x =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((a.lat * Math.PI) / 180) * Math.cos((b.lat * Math.PI) / 180) * Math.sin(dLng / 2) ** 2;
+  return 2 * R * Math.asin(Math.sqrt(x));
+}
+
+/** Approx road distance, matching the backend (straight line x 1.3). */
+export function roadKm(a: LatLng, b: LatLng): number {
+  return Math.round(distanceKm(a, b) * 1.3 * 10) / 10;
+}
