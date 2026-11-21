@@ -8,18 +8,46 @@ import { Map } from "@/components/Map";
 import { BottomSheet } from "@/components/Sheet";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
+import { bookingDraft, getRecentPlaces } from "@/lib/draft";
 import { firstName, STATUS_LABEL } from "@/lib/format";
 import { useForegroundInterval } from "@/lib/hooks";
-import { getCurrentPosition, LocationError } from "@/lib/location";
-import type { LatLng, ServiceType, Trip } from "@/lib/types";
+import { addressFor, getCurrentPosition, LocationError } from "@/lib/location";
+import type { LatLng, Place, Trip } from "@/lib/types";
 import { colors, font, radius, shadow, space } from "@/theme";
 
+/**
+ * Customer home, like Uber / Rapido:
+ * map with free drivers · "Where to?" · recent places · Ride / Rental / Driver.
+ */
 export default function CustomerHome() {
   const { profile } = useAuth();
   const [here, setHere] = useState<LatLng | null>(null);
   const [locError, setLocError] = useState<string | null>(null);
   const [active, setActive] = useState<Trip | null>(null);
   const [nearby, setNearby] = useState<api.NearbyDriver[] | null>(null);
+  const [recents, setRecents] = useState<Place[]>([]);
+
+  const locate = useCallback(async () => {
+    try {
+      setLocError(null);
+      const pos = await getCurrentPosition();
+      setHere(pos);
+      // Pickup defaults to where the customer is now
+      const address = await addressFor(pos);
+      bookingDraft.setPickup({ ...pos, address });
+    } catch (err) {
+      setLocError(err instanceof LocationError ? err.message : "Could not find your location.");
+    }
+  }, []);
+
+  useFocusEffect(
+    useCallback(() => {
+      locate();
+      bookingDraft.reset();
+      getRecentPlaces().then((r) => setRecents(r.slice(0, 3)));
+      api.getMyActiveTrip("customer").then(setActive).catch(() => setActive(null));
+    }, [locate]),
+  );
 
   const loadNearby = useCallback(async (pos: LatLng | null) => {
     if (!pos) return;
@@ -33,34 +61,18 @@ export default function CustomerHome() {
   useEffect(() => {
     loadNearby(here);
   }, [here, loadNearby]);
-
-  // Drivers go free and busy all the time: refresh every 30 seconds.
   useForegroundInterval(() => loadNearby(here), 30_000, !!here && !active);
 
-  const cars = nearby?.filter((d) => d.has_car).length ?? 0;
-  const drivers = nearby?.length ?? 0;
+  const goTo = (place: Place) => {
+    bookingDraft.setDrop(place);
+    router.push("/ride");
+  };
 
-  const locate = useCallback(async () => {
-    try {
-      setLocError(null);
-      setHere(await getCurrentPosition());
-    } catch (err) {
-      setLocError(err instanceof LocationError ? err.message : "Could not find your location.");
-    }
-  }, []);
-
-  useFocusEffect(
-    useCallback(() => {
-      locate();
-      api.getMyActiveTrip("customer").then(setActive).catch(() => setActive(null));
-    }, [locate]),
-  );
-
-  const book = (service: ServiceType) => router.push(`/book?service=${service}`);
+  const free = nearby?.length ?? 0;
 
   return (
     <View style={{ flex: 1 }}>
-      <Map center={here} bottomInset={330} nearby={active ? undefined : nearby ?? undefined} />
+      <Map center={here} bottomInset={420} nearby={active ? undefined : nearby ?? undefined} />
 
       <SafeAreaView edges={["top"]} style={styles.top} pointerEvents="box-none">
         <View style={styles.hello}>
@@ -81,25 +93,60 @@ export default function CustomerHome() {
           </Pressable>
         ) : (
           <>
-            <Text style={font.heading}>What do you need?</Text>
-            <NearbyLine count={nearby == null ? null : drivers} />
-            <View style={styles.tiles}>
-              <Tile
-                icon="car-sport"
-                title="Car + driver"
-                text="We send a car with a driver"
-                badge={nearby == null ? undefined : cars > 0 ? `${cars} free nearby` : "None free now"}
-                ok={cars > 0}
-                onPress={() => book("car_with_driver")}
-              />
-              <Tile
+            {/* Where to? */}
+            <Pressable
+              accessibilityRole="search"
+              accessibilityLabel="Where are you going?"
+              onPress={() => router.push("/search")}
+              style={({ pressed }) => [styles.whereTo, pressed && { backgroundColor: colors.surfacePressed }]}
+            >
+              <Ionicons name="search" size={24} color={colors.black} />
+              <Text style={styles.whereText}>Where are you going?</Text>
+              <View style={styles.nowPill}>
+                <Ionicons name="time" size={14} color={colors.black} />
+                <Text style={styles.nowText}>Now</Text>
+              </View>
+            </Pressable>
+
+            {/* Recent places */}
+            {recents.map((p) => (
+              <Pressable
+                key={`${p.lat},${p.lng}`}
+                onPress={() => goTo(p)}
+                accessibilityRole="button"
+                style={({ pressed }) => [styles.recent, pressed && { backgroundColor: colors.surface }]}
+              >
+                <View style={styles.recentIcon}>
+                  <Ionicons name="time-outline" size={20} color={colors.black} />
+                </View>
+                <Text style={styles.recentText} numberOfLines={1}>
+                  {p.address}
+                </Text>
+                <Ionicons name="chevron-forward" size={18} color={colors.textFaint} />
+              </Pressable>
+            ))}
+
+            {/* Services */}
+            <View style={styles.services}>
+              <Service icon="car-sport" label="Ride" onPress={() => router.push("/search")} />
+              <Service icon="hourglass" label="Rental" hint="By hours" onPress={() => router.push("/rental")} />
+              <Service
                 icon="person"
-                title="Driver only"
-                text="A driver for your own car"
-                badge={nearby == null ? undefined : drivers > 0 ? `${drivers} free nearby` : "None free now"}
-                ok={drivers > 0}
-                onPress={() => book("driver_only")}
+                label="Driver"
+                hint="For my car"
+                onPress={() => router.push("/search?service=driver_only")}
               />
+            </View>
+
+            <View style={styles.nearbyRow}>
+              <View style={[styles.liveDot, { backgroundColor: free > 0 ? colors.green : colors.textFaint }]} />
+              <Text style={font.small}>
+                {nearby == null
+                  ? "Checking for drivers near you…"
+                  : free > 0
+                    ? `${free} driver${free > 1 ? "s" : ""} free near you`
+                    : "No free drivers close by now. You can still book."}
+              </Text>
             </View>
           </>
         )}
@@ -115,54 +162,27 @@ export default function CustomerHome() {
   );
 }
 
-function NearbyLine({ count }: { count: number | null }) {
-  if (count == null) {
-    return <Text style={[font.small, styles.nearbyLine]}>Checking for drivers near you…</Text>;
-  }
-  return (
-    <View style={[styles.nearbyLine, { flexDirection: "row", alignItems: "center", gap: space.sm }]}>
-      <View style={[styles.liveDot, { backgroundColor: count > 0 ? colors.green : colors.textFaint }]} />
-      <Text style={font.small}>
-        {count > 0
-          ? `${count} driver${count > 1 ? "s" : ""} free within 5 km`
-          : "No free drivers close by right now. You can still book — we search up to 20 km."}
-      </Text>
-    </View>
-  );
-}
-
-function Tile({
+function Service({
   icon,
-  title,
-  text,
-  badge,
-  ok,
+  label,
+  hint,
   onPress,
 }: {
   icon: keyof typeof Ionicons.glyphMap;
-  title: string;
-  text: string;
-  badge?: string;
-  ok?: boolean;
+  label: string;
+  hint?: string;
   onPress: () => void;
 }) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={title}
+      accessibilityLabel={hint ? `${label}, ${hint}` : label}
       onPress={onPress}
-      style={({ pressed }) => [styles.tile, pressed && { backgroundColor: colors.surfacePressed }]}
+      style={({ pressed }) => [styles.service, pressed && { backgroundColor: colors.surfacePressed }]}
     >
-      <View style={styles.tileIcon}>
-        <Ionicons name={icon} size={34} color={colors.black} />
-      </View>
-      <Text style={styles.tileTitle}>{title}</Text>
-      <Text style={styles.tileText}>{text}</Text>
-      {badge && (
-        <View style={[styles.badge, { backgroundColor: ok ? colors.greenSoft : colors.white }]}>
-          <Text style={[styles.badgeText, { color: ok ? colors.green : colors.textMuted }]}>{badge}</Text>
-        </View>
-      )}
+      <Ionicons name={icon} size={30} color={colors.black} />
+      <Text style={styles.serviceLabel}>{label}</Text>
+      {hint && <Text style={styles.serviceHint}>{hint}</Text>}
     </Pressable>
   );
 }
@@ -187,29 +207,58 @@ const styles = StyleSheet.create({
     ...shadow,
   },
   helloText: { fontSize: 17, fontWeight: "700", color: colors.text },
-  tiles: { flexDirection: "row", gap: space.md },
-  nearbyLine: { marginTop: space.xs, marginBottom: space.lg },
-  liveDot: { width: 10, height: 10, borderRadius: 5 },
-  badge: { alignSelf: "flex-start", borderRadius: 999, paddingHorizontal: 10, paddingVertical: 4, marginTop: space.md },
-  badgeText: { fontSize: 13, fontWeight: "700" },
-  tile: {
-    flex: 1,
+  whereTo: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
     backgroundColor: colors.surface,
-    borderRadius: radius.lg,
-    padding: space.lg,
-    minHeight: 160,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.lg,
+    minHeight: 60,
+    marginBottom: space.sm,
   },
-  tileIcon: {
-    width: 60,
-    height: 60,
-    borderRadius: radius.md,
+  whereText: { flex: 1, fontSize: 19, fontWeight: "700", color: colors.text },
+  nowPill: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 4,
     backgroundColor: colors.white,
+    borderRadius: radius.pill,
+    paddingHorizontal: space.md,
+    paddingVertical: 6,
+  },
+  nowText: { fontSize: 14, fontWeight: "700", color: colors.text },
+  recent: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    minHeight: 52,
+    borderRadius: radius.sm,
+    paddingHorizontal: 4,
+  },
+  recentIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.surface,
     alignItems: "center",
     justifyContent: "center",
-    marginBottom: space.md,
   },
-  tileTitle: { fontSize: 19, fontWeight: "800", color: colors.text },
-  tileText: { fontSize: 14, color: colors.textMuted, marginTop: 4 },
+  recentText: { flex: 1, fontSize: 16, color: colors.text },
+  services: { flexDirection: "row", gap: space.sm, marginTop: space.md },
+  service: {
+    flex: 1,
+    alignItems: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    paddingVertical: space.md,
+    minHeight: 92,
+    justifyContent: "center",
+  },
+  serviceLabel: { fontSize: 16, fontWeight: "700", color: colors.text, marginTop: 6 },
+  serviceHint: { fontSize: 12, color: colors.textMuted },
+  nearbyRow: { flexDirection: "row", alignItems: "center", gap: space.sm, marginTop: space.lg },
+  liveDot: { width: 10, height: 10, borderRadius: 5 },
   active: {
     flexDirection: "row",
     alignItems: "center",

@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router, useLocalSearchParams } from "expo-router";
 import { useCallback, useEffect, useState } from "react";
-import { Alert, Linking, StyleSheet, Text, View } from "react-native";
+import { Alert, Linking, Modal, StyleSheet, Text, TextInput, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button, IconButton } from "@/components/Button";
 import { Map } from "@/components/Map";
@@ -19,7 +19,7 @@ import { colors, font, radius, space } from "@/theme";
 
 const NEXT: Partial<Record<Trip["status"], { status: "arrived" | "started" | "completed"; label: string; ask: string }>> = {
   accepted: { status: "arrived", label: "I have arrived", ask: "Are you at the pickup point?" },
-  arrived: { status: "started", label: "Start trip", ask: "Is the customer with you? Start the trip now?" },
+  arrived: { status: "started", label: "Start trip", ask: "" }, // needs the customer's PIN
   started: { status: "completed", label: "Complete trip", ask: "Have you reached and finished the trip?" },
 };
 
@@ -29,6 +29,7 @@ export default function DriverTrip() {
   const [trip, setTrip] = useState<Trip | null>(null);
   const [customer, setCustomer] = useState<TripPerson | null>(null);
   const [busy, setBusy] = useState(false);
+  const [askPin, setAskPin] = useState(false);
 
   const load = useCallback(async () => {
     if (!id) return;
@@ -62,6 +63,10 @@ export default function DriverTrip() {
 
   const advance = async () => {
     if (!next) return;
+    if (next.status === "started") {
+      setAskPin(true);
+      return;
+    }
     if (!(await confirm(next.label, next.ask, "Yes"))) return;
     setBusy(true);
     try {
@@ -69,6 +74,19 @@ export default function DriverTrip() {
       await load();
     } catch (err) {
       showError(err);
+    } finally {
+      setBusy(false);
+    }
+  };
+
+  const startWithPin = async (pin: string) => {
+    setBusy(true);
+    try {
+      await api.updateTripStatus(trip.id, "started", pin);
+      setAskPin(false);
+      await load();
+    } catch (err) {
+      showError(err, "Could not start");
     } finally {
       setBusy(false);
     }
@@ -183,6 +201,8 @@ export default function DriverTrip() {
 
         {trip.status === "completed" && <RateCustomer trip={trip} customer={customer} />}
 
+        {askPin && <PinPrompt busy={busy} onCancel={() => setAskPin(false)} onSubmit={startWithPin} />}
+
         {(trip.status === "cancelled" || trip.status === "expired" || trip.status === "searching") && (
           <View>
             <Text style={[font.heading, { textAlign: "center" }]}>
@@ -197,6 +217,37 @@ export default function DriverTrip() {
         )}
       </BottomSheet>
     </View>
+  );
+}
+
+/** Driver types the customer's 4-digit PIN to start the trip. */
+function PinPrompt({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () => void; onSubmit: (pin: string) => void }) {
+  const [pin, setPin] = useState("");
+  return (
+    <Modal visible transparent animationType="fade" onRequestClose={onCancel}>
+      <View style={styles.modalBack}>
+        <View style={styles.modalCard}>
+          <Text style={[font.heading, { textAlign: "center" }]}>Enter ride PIN</Text>
+          <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>
+            Ask the customer for the 4-digit PIN in their app.
+          </Text>
+          <TextInput
+            value={pin}
+            onChangeText={(t) => setPin(t.replace(/\D/g, "").slice(0, 4))}
+            keyboardType="number-pad"
+            maxLength={4}
+            autoFocus
+            style={styles.pinInput}
+            placeholder="• • • •"
+            placeholderTextColor={colors.textFaint}
+            accessibilityLabel="Ride PIN"
+            onSubmitEditing={() => pin.length === 4 && onSubmit(pin)}
+          />
+          <Button title="Start trip" onPress={() => onSubmit(pin)} loading={busy} disabled={pin.length !== 4} />
+          <Button title="Cancel" variant="ghost" size="md" onPress={onCancel} disabled={busy} />
+        </View>
+      </View>
+    </Modal>
   );
 }
 
@@ -282,6 +333,19 @@ const styles = StyleSheet.create({
     borderRadius: radius.sm,
   },
   row: { flexDirection: "row", gap: space.sm, marginTop: space.lg },
+  modalBack: { flex: 1, backgroundColor: colors.overlay, justifyContent: "center", padding: space.xl },
+  modalCard: { backgroundColor: colors.white, borderRadius: radius.lg, padding: space.xl },
+  pinInput: {
+    fontSize: 40,
+    fontWeight: "800",
+    letterSpacing: 16,
+    textAlign: "center",
+    backgroundColor: colors.surface,
+    borderRadius: radius.md,
+    marginVertical: space.xl,
+    paddingVertical: space.md,
+    color: colors.text,
+  },
   doneIcon: {
     width: 72,
     height: 72,

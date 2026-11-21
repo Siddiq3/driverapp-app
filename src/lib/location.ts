@@ -86,6 +86,58 @@ export async function searchPlace(query: string, near?: LatLng): Promise<Place |
   return null;
 }
 
+export type Suggestion = Place & { title: string; subtitle: string; km: number | null };
+
+/**
+ * "Search as you type" using the phone's free geocoder.
+ * Returns up to 3 matches, nearest first, with a readable area name under each.
+ */
+export async function suggestPlaces(query: string, near?: LatLng | null): Promise<Suggestion[]> {
+  const q = query.trim();
+  if (q.length < 3) return [];
+
+  let city = "";
+  if (near) {
+    try {
+      const [r] = await Location.reverseGeocodeAsync({ latitude: near.lat, longitude: near.lng });
+      city = r?.city ?? r?.subregion ?? "";
+    } catch {
+      /* ignore */
+    }
+  }
+
+  const queries = city && !q.toLowerCase().includes(city.toLowerCase()) ? [`${q}, ${city}`, q] : [q];
+  const found: LatLng[] = [];
+  for (const attempt of queries) {
+    try {
+      const results = await Location.geocodeAsync(attempt);
+      for (const r of results) {
+        const p = { lat: r.latitude, lng: r.longitude };
+        if (!found.some((f) => distanceKm(f, p) < 0.3)) found.push(p);
+      }
+    } catch {
+      /* try next */
+    }
+    if (found.length >= 3) break;
+  }
+
+  const sorted = near ? [...found].sort((a, b) => distanceKm(a, near) - distanceKm(b, near)) : found;
+  const top = sorted.slice(0, 3);
+
+  return Promise.all(
+    top.map(async (p) => {
+      const area = await addressFor(p);
+      return {
+        ...p,
+        title: q,
+        subtitle: area,
+        address: `${q}, ${area}`.slice(0, 200),
+        km: near ? Math.round(distanceKm(p, near) * 10) / 10 : null,
+      };
+    }),
+  );
+}
+
 function closest(points: LatLng[], to: LatLng): LatLng {
   return points.reduce((best, p) => (distanceKm(p, to) < distanceKm(best, to) ? p : best), points[0]);
 }

@@ -207,8 +207,16 @@ export async function skipTrip(tripId: string): Promise<void> {
   if (error) fail(error);
 }
 
-export async function updateTripStatus(tripId: string, status: "arrived" | "started" | "completed"): Promise<void> {
-  await tripAction("update", { trip_id: tripId, status });
+/** Starting a trip needs the customer's 4-digit PIN. */
+export async function updateTripStatus(tripId: string, status: "arrived" | "started" | "completed", pin?: string): Promise<void> {
+  await tripAction("update", { trip_id: tripId, status, pin: pin ?? null });
+}
+
+/** The customer's ride PIN (only while the driver is coming / has arrived). */
+export async function getTripPin(tripId: string): Promise<string | null> {
+  const { data, error } = await supabase.rpc("get_trip_pin", { p_trip: tripId });
+  if (error) fail(error);
+  return (data as string | null) ?? null;
 }
 
 /** Offers waiting for this driver, with their trip details. */

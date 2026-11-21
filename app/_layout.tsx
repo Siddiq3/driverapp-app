@@ -54,7 +54,10 @@ export default function RootLayout() {
           <Stack.Screen name="driver-pending" options={{ gestureEnabled: false }} />
           <Stack.Screen name="customer" options={{ gestureEnabled: false }} />
           <Stack.Screen name="driver" options={{ gestureEnabled: false }} />
-          <Stack.Screen name="book" />
+          <Stack.Screen name="search" options={{ animation: "slide_from_bottom" }} />
+          <Stack.Screen name="pick-on-map" />
+          <Stack.Screen name="ride" />
+          <Stack.Screen name="rental" />
           <Stack.Screen name="trip/[id]" options={{ gestureEnabled: false }} />
           <Stack.Screen name="drive/[id]" options={{ gestureEnabled: false }} />
         </Stack>

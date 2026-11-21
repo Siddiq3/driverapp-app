@@ -6,15 +6,15 @@ Backend: [driverapp-backend](https://github.com/Siddiq3/driverapp-backend) (Supa
 
 ## What's inside
 
-| Customer | Driver |
+| Customer (Uber / Rapido style) | Driver |
 | --- | --- |
-| Sign in with Google, add name + phone | Register licence (+ car details if they have a car) |
-| Choose **Car + driver** or **Driver only** | Wait for approval (checked by admin) |
-| In town / Outstation / By hours, pick car type, see price | Big **Go free / Go busy** switch |
-| Request goes to all free drivers nearby | Loud push + full-screen request card with 2-min timer |
-| Live status: finding → coming → arrived → on trip → done | First to accept gets the trip |
-| Call driver, share trip, SOS, cancel | Call customer, navigate in Google Maps, arrived → start → complete |
-| Rate the driver | Rate customer, go free again in one tap |
+| Google login → allow location → name + phone | Register licence (+ car details if they have a car) |
+| Home: map with free drivers, **Where are you going?**, recent places | Wait for approval (checked by admin) |
+| Shortcuts: **Ride** · **Rental** (by hours) · **Driver** (for my car) | Big **Go free / Go busy** switch |
+| Search as you type, recent places, or **choose on map** with a pin | Loud push + full-screen request card with 2-min timer |
+| Choose ride: Mini / Sedan / SUV / Driver only, with price and "3 min away" | First to accept gets the trip |
+| Live status, driver card, **4-digit ride PIN**, call, share, SOS | Enter the customer's PIN to start the trip |
+| Pay driver by cash / UPI, rate the driver | Navigate in Google Maps, complete, rate customer, go free again |
 
 Design: clean black-and-white, large text and buttons, very few words per screen, so first-time smartphone users in small towns can follow it.
 
@@ -25,7 +25,10 @@ app/                    screens (expo-router: file = screen)
   welcome, setup, driver-register, driver-pending
   customer/             tabs: home · trips · account
   driver/               tabs: home · trips · account
-  book.tsx              booking form
+  search.tsx            "Where to?" with suggestions + recent places
+  pick-on-map.tsx       choose a place by moving the map
+  ride.tsx              choose Mini / Sedan / SUV / Driver only, then book
+  rental.tsx            book by hours
   trip/[id].tsx         customer's live trip
   drive/[id].tsx        driver's live trip
 src/

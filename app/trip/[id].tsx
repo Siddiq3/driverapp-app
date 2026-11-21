@@ -136,6 +136,16 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
 
 function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
   const [cancelling, setCancelling] = useState(false);
+  const [pin, setPin] = useState<string | null>(null);
+
+  // Ride PIN: the driver needs it to start the trip (like Uber / Rapido)
+  useEffect(() => {
+    if (trip.status === "accepted" || trip.status === "arrived") {
+      api.getTripPin(trip.id).then(setPin).catch(() => undefined);
+    } else {
+      setPin(null);
+    }
+  }, [trip.id, trip.status]);
 
   const headline =
     trip.status === "accepted" ? "Driver is on the way" : trip.status === "arrived" ? "Driver has arrived" : "Enjoy your trip";
@@ -195,6 +205,22 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
       </View>
       {trip.status === "arrived" && (
         <Text style={[font.small, { marginBottom: space.md }]}>Please meet your driver at the pickup point.</Text>
+      )}
+
+      {pin && (
+        <View style={styles.pinBox} accessibilityLabel={`Your ride PIN is ${pin.split("").join(" ")}`}>
+          <View style={{ flex: 1 }}>
+            <Text style={font.bodyStrong}>Your ride PIN</Text>
+            <Text style={font.tiny}>Tell this to the driver to start the trip</Text>
+          </View>
+          <View style={styles.pinDigits}>
+            {pin.split("").map((d, i) => (
+              <Text key={i} style={styles.pinDigit}>
+                {d}
+              </Text>
+            ))}
+          </View>
+        </View>
       )}
 
       <View style={styles.driverCard}>
@@ -302,7 +328,7 @@ function Ended({ trip }: { trip: Trip }) {
       </Text>
       <Button
         title="Book again"
-        onPress={() => router.replace(`/book?service=${trip.service_type}`)}
+        onPress={() => router.replace(`/search?service=${trip.service_type}`)}
         style={{ marginTop: space.xl }}
       />
       <Button title="Go home" variant="ghost" size="md" onPress={() => router.replace("/customer/home")} />
@@ -339,6 +365,28 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   actions: { flexDirection: "row", gap: space.sm, marginBottom: space.lg },
+  pinBox: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: space.md,
+    borderWidth: 2,
+    borderColor: colors.black,
+    borderRadius: radius.md,
+    padding: space.md,
+  },
+  pinDigits: { flexDirection: "row", gap: 6 },
+  pinDigit: {
+    width: 36,
+    height: 44,
+    borderRadius: 6,
+    backgroundColor: colors.black,
+    color: colors.white,
+    fontSize: 24,
+    fontWeight: "800",
+    textAlign: "center",
+    lineHeight: 44,
+    overflow: "hidden",
+  },
   doneIcon: {
     width: 72,
     height: 72,
