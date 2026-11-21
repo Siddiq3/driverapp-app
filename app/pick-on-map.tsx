@@ -10,6 +10,7 @@ import { bookingDraft, saveRecentPlace } from "@/lib/draft";
 import { addressFor } from "@/lib/location";
 import type { LatLng } from "@/lib/types";
 import { colors, font, shadow, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Move the map under the pin to choose a place (free reverse geocoding by the phone). */
 export default function PickOnMap() {
@@ -29,7 +30,7 @@ export default function PickOnMap() {
     if (!center) return;
     let alive = true;
     setLooking(true);
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       const a = await addressFor(center);
       if (alive) {
         setAddress(a);
@@ -38,7 +39,7 @@ export default function PickOnMap() {
     }, 400);
     return () => {
       alive = false;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [center?.lat, center?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -75,23 +76,23 @@ export default function PickOnMap() {
       </View>
 
       <SafeAreaView edges={["top"]} style={styles.topBar} pointerEvents="box-none">
-        <IconButton icon="arrow-back" label="Back" background={colors.white} onPress={() => router.back()} />
+        <IconButton icon="arrow-back" label={t("Back")} background={colors.white} onPress={() => router.back()} />
       </SafeAreaView>
 
       <BottomSheet>
-        <Text style={font.small}>{field === "pickup" ? "Pickup point" : "Drop point"}</Text>
+        <Text style={font.small}>{field === "pickup" ? t("Pickup point") : t("Drop point")}</Text>
         <View style={styles.addressRow}>
           <Ionicons name="location" size={22} color={colors.black} />
           {looking ? (
             <ActivityIndicator color={colors.black} />
           ) : (
             <Text style={[font.subheading, { flex: 1 }]} numberOfLines={2}>
-              {address ?? "Move the map to choose"}
+              {address ?? t("Move the map to choose")}
             </Text>
           )}
         </View>
         <Button
-          title={field === "pickup" ? "Confirm pickup" : "Confirm drop"}
+          title={field === "pickup" ? t("Confirm pickup") : t("Confirm drop")}
           onPress={confirm}
           disabled={!address || looking}
         />

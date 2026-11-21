@@ -17,6 +17,7 @@ import { useForegroundInterval } from "@/lib/hooks";
 import { addressFor, getCurrentPosition, LocationError } from "@/lib/location";
 import type { FreeDriver, LatLng, Trip } from "@/lib/types";
 import { colors, font, radius, shadow, space } from "@/theme";
+import { t } from "@/i18n";
 
 type Kind = "car" | "driver";
 
@@ -41,7 +42,7 @@ export default function CustomerHome() {
       const address = await addressFor(pos);
       bookingDraft.setPickup({ ...pos, address });
     } catch (err) {
-      setLocError(err instanceof LocationError ? err.message : "Could not find your location.");
+      setLocError(err instanceof LocationError ? err.message : t("Could not find your location."));
     }
   }, []);
 
@@ -85,9 +86,9 @@ export default function CustomerHome() {
 
       <SafeAreaView edges={["top"]} style={styles.top} pointerEvents="box-none">
         <View style={styles.hello}>
-          <Text style={styles.helloText}>Hi {firstName(profile?.full_name)} 👋</Text>
+          <Text style={styles.helloText}>{t("Hi {name}", { name: firstName(profile?.full_name) })} 👋</Text>
         </View>
-        <IconButton icon="locate" label="Show my location" onPress={locate} background={colors.white} />
+        <IconButton icon="locate" label={t("Show my location")} onPress={locate} background={colors.white} />
       </SafeAreaView>
 
       <BottomSheet style={{ maxHeight: "64%" }}>
@@ -96,7 +97,7 @@ export default function CustomerHome() {
             <View style={styles.activeDot} />
             <View style={{ flex: 1 }}>
               <Text style={[font.bodyStrong, { color: colors.white }]}>{STATUS_LABEL[active.status]}</Text>
-              <Text style={{ color: "#CFCFCF", fontSize: 15 }}>Tap to see your trip</Text>
+              <Text style={{ color: "#CFCFCF", fontSize: 15 }}>{t("Tap to see your trip")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={colors.white} />
           </Pressable>
@@ -106,15 +107,15 @@ export default function CustomerHome() {
               value={kind}
               onChange={setKind}
               options={[
-                { value: "car", label: "🚗  Car + driver" },
-                { value: "driver", label: "🧑  Driver only" },
+                { value: "car", label: t("🚗  Car + driver") },
+                { value: "driver", label: t("🧑  Driver only") },
               ]}
             />
 
             <View style={styles.listHead}>
               <View style={[styles.liveDot, { backgroundColor: (list?.length ?? 0) > 0 ? colors.green : colors.textFaint }]} />
               <Text style={font.bodyStrong}>
-                {list == null ? "Checking who is free…" : `${list.length} free near you`}
+                {list == null ? t("Checking who is free…") : t("{count} free near you", { count: list.length })}
               </Text>
               {list == null && <ActivityIndicator color={colors.black} />}
             </View>
@@ -125,10 +126,10 @@ export default function CustomerHome() {
               {list && list.length === 0 && (
                 <View style={styles.empty}>
                   <Text style={[font.body, { textAlign: "center" }]}>
-                    No {kind === "car" ? "cars" : "drivers"} are free within 10 km right now.
+                    {kind === "car" ? t("No cars are free within 10 km right now.") : t("No drivers are free within 10 km right now.")}
                   </Text>
                   <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>
-                    Try again in a few minutes, or send a request to everyone nearby.
+                    {t("Try again in a few minutes, or send a request to everyone nearby.")}
                   </Text>
                 </View>
               )}
@@ -141,8 +142,12 @@ export default function CustomerHome() {
               >
                 <Ionicons name="megaphone-outline" size={22} color={colors.black} />
                 <View style={{ flex: 1 }}>
-                  <Text style={font.bodyStrong}>Ask everyone nearby</Text>
-                  <Text style={font.tiny}>Your request goes to all free {kind === "car" ? "cars" : "drivers"}. First to accept comes.</Text>
+                  <Text style={font.bodyStrong}>{t("Ask everyone nearby")}</Text>
+                  <Text style={font.tiny}>
+                    {kind === "car"
+                      ? t("Your request goes to all free cars. First to accept comes.")
+                      : t("Your request goes to all free drivers. First to accept comes.")}
+                  </Text>
                 </View>
                 <Ionicons name="chevron-forward" size={20} color={colors.textFaint} />
               </Pressable>

@@ -8,6 +8,7 @@ import { addressFor, getCurrentPosition, suggestPlaces, type Suggestion } from "
 import type { Place } from "@/lib/types";
 import { showError } from "@/lib/alert";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 type Field = "pickup" | "drop";
 type Row =
@@ -54,7 +55,7 @@ export default function Search() {
     }
     setSearching(true);
     let alive = true;
-    const t = setTimeout(async () => {
+    const timer = setTimeout(async () => {
       const res = await suggestPlaces(query, pickup);
       if (alive) {
         setSuggestions(res);
@@ -63,7 +64,7 @@ export default function Search() {
     }, 600);
     return () => {
       alive = false;
-      clearTimeout(t);
+      clearTimeout(timer);
     };
   }, [query, typed, pickup]);
 
@@ -85,7 +86,7 @@ export default function Search() {
       const address = await addressFor(pos);
       choose({ ...pos, address });
     } catch (err) {
-      showError(err, "Location needed");
+      showError(err, t("Location needed"));
     }
   };
 
@@ -98,17 +99,17 @@ export default function Search() {
     suggestions.forEach((s) => rows.push({ kind: "suggestion", place: s }));
   }
   if (recents.length > 0) {
-    rows.push({ kind: "header", title: "Recent" });
+    rows.push({ kind: "header", title: t("Recent") });
     recents.forEach((p) => rows.push({ kind: "recent", place: p }));
   }
 
   return (
     <SafeAreaView style={styles.safe} edges={["top", "bottom"]}>
       <View style={styles.head}>
-        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityRole="button" accessibilityLabel="Go back">
+        <Pressable onPress={() => router.back()} hitSlop={12} accessibilityRole="button" accessibilityLabel={t("Go back")}>
           <Ionicons name="arrow-back" size={26} color={colors.black} />
         </Pressable>
-        <Text style={font.heading}>{service === "driver_only" ? "Driver for my car" : "Plan your ride"}</Text>
+        <Text style={font.heading}>{service === "driver_only" ? t("Driver for my car") : t("Plan your ride")}</Text>
       </View>
 
       <View style={styles.boxes}>
@@ -123,11 +124,11 @@ export default function Search() {
             value={pickupText}
             onChangeText={setPickupText}
             onFocus={() => setField("pickup")}
-            placeholder="Pickup location"
+            placeholder={t("Pickup location")}
             placeholderTextColor={colors.textFaint}
             style={[styles.input, field === "pickup" && styles.inputActive]}
             selectTextOnFocus
-            accessibilityLabel="Pickup location"
+            accessibilityLabel={t("Pickup location")}
           />
           <TextInput
             ref={dropRef}
@@ -135,11 +136,11 @@ export default function Search() {
             onChangeText={setDropText}
             onFocus={() => setField("drop")}
             autoFocus={field === "drop"}
-            placeholder="Where to?"
+            placeholder={t("Where to?")}
             placeholderTextColor={colors.textFaint}
             style={[styles.input, field === "drop" && styles.inputActive]}
             returnKeyType="search"
-            accessibilityLabel="Drop location"
+            accessibilityLabel={t("Drop location")}
           />
         </View>
       </View>
@@ -153,7 +154,7 @@ export default function Search() {
         accessibilityRole="button"
       >
         <Ionicons name="hourglass-outline" size={18} color={colors.blue} />
-        <Text style={styles.skipText}>No drop? Book by hours</Text>
+        <Text style={styles.skipText}>{t("No drop? Book by hours")}</Text>
       </Pressable>
 
       <FlatList
@@ -166,24 +167,24 @@ export default function Search() {
               return (
                 <RowItem
                   icon="map"
-                  title="Choose on map"
-                  subtitle={`Move the map to set your ${field === "pickup" ? "pickup" : "drop"}`}
+                  title={t("Choose on map")}
+                  subtitle={field === "pickup" ? t("Move the map to set your pickup") : t("Move the map to set your drop")}
                   onPress={() => router.push(`/pick-on-map?field=${field}&service=${service}`)}
                 />
               );
             case "current":
-              return <RowItem icon="locate" title="Use my current location" onPress={useCurrent} />;
+              return <RowItem icon="locate" title={t("Use my current location")} onPress={useCurrent} />;
             case "searching":
               return (
                 <View style={styles.status}>
                   <ActivityIndicator color={colors.black} />
-                  <Text style={font.small}>Searching…</Text>
+                  <Text style={font.small}>{t("Searching…")}</Text>
                 </View>
               );
             case "none":
               return (
                 <View style={styles.status}>
-                  <Text style={font.small}>Not found. Try adding the area or town, or choose on map.</Text>
+                  <Text style={font.small}>{t("Not found. Try adding the area or town, or choose on map.")}</Text>
                 </View>
               );
             case "header":

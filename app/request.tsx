@@ -11,6 +11,7 @@ import * as api from "@/lib/api";
 import { chosen, useBookingDraft } from "@/lib/draft";
 import { firstName, parseRupees, ratesText, VEHICLE_LABEL } from "@/lib/format";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Send a request to the one driver the customer picked from the "free near you" list. */
 export default function RequestDriver() {
@@ -33,13 +34,13 @@ export default function RequestDriver() {
     rate_per_day: driver.rate_per_day,
   });
   const offerValue = parseRupees(offer);
-  const offerError = offer.trim() && (offerValue == null || offerValue < 50) ? "Enter at least ₹50" : null;
+  const offerError = offer.trim() && (offerValue == null || offerValue < 50) ? t("Enter at least ₹50") : null;
 
   const send = async () => {
     if (!pickup || offerError) return;
     setSending(true);
     try {
-      const details = [where.trim() ? `Going to: ${where.trim()}` : null, note.trim() || null].filter(Boolean).join(" · ");
+      const details = [where.trim() ? t("Going to: {place}", { place: where.trim() }) : null, note.trim() || null].filter(Boolean).join(" · ");
       const res = await api.requestTrip({
         service: wantsCar ? "car_with_driver" : "driver_only",
         tripType: "local",
@@ -58,7 +59,7 @@ export default function RequestDriver() {
       }
       router.push(`/trip/${res.trip_id}`);
     } catch (err) {
-      showError(err, "Could not send");
+      showError(err, t("Could not send"));
     } finally {
       setSending(false);
     }
@@ -68,20 +69,20 @@ export default function RequestDriver() {
     <Screen
       back
       footer={
-        <Button title={`Send request to ${name}`} icon="paper-plane" onPress={send} loading={sending} disabled={!pickup} />
+        <Button title={t("Send request to {name}", { name })} icon="paper-plane" onPress={send} loading={sending} disabled={!pickup} />
       }
     >
       <View style={styles.card}>
         <Avatar name={driver.full_name} url={driver.avatar_url} size={72} />
         <View style={{ flex: 1 }}>
-          <Text style={font.heading}>{driver.full_name ?? "Driver"}</Text>
+          <Text style={font.heading}>{driver.full_name ?? t("Driver")}</Text>
           <RatingText avg={driver.rating_avg} count={driver.rating_count} />
           <Text style={[font.small, { marginTop: 4 }]}>
             {wantsCar
-              ? [driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] : "Car", driver.vehicle_model].filter(Boolean).join(" · ")
-              : "Will drive your car"}
+              ? [driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] : t("Car"), driver.vehicle_model].filter(Boolean).join(" · ")
+              : t("Will drive your car")}
             {"  ·  "}
-            {driver.distance_km} km away
+            {t("{km} km away", { km: driver.distance_km })}
           </Text>
         </View>
       </View>
@@ -90,25 +91,25 @@ export default function RequestDriver() {
         <View style={styles.rate}>
           <Ionicons name="pricetag-outline" size={20} color={colors.green} />
           <View style={{ flex: 1 }}>
-            <Text style={font.tiny}>{name}'s prices</Text>
+            <Text style={font.tiny}>{t("{name}'s prices", { name })}</Text>
             {prices ? <Text style={styles.prices}>{prices}</Text> : null}
             {driver.rate_note ? <Text style={font.small}>{driver.rate_note}</Text> : null}
           </View>
         </View>
       )}
 
-      <SectionLabel>Pickup</SectionLabel>
+      <SectionLabel>{t("Pickup")}</SectionLabel>
       <Pressable
         style={styles.pickup}
         onPress={() => router.push("/pick-on-map?field=pickup")}
         accessibilityRole="button"
-        accessibilityLabel="Change pickup"
+        accessibilityLabel={t("Change pickup")}
       >
         <View style={styles.dot} />
         <Text style={[font.body, { flex: 1 }]} numberOfLines={2}>
-          {pickup?.address ?? "Finding your location…"}
+          {pickup?.address ?? t("Finding your location…")}
         </Text>
-        <Text style={styles.change}>Change</Text>
+        <Text style={styles.change}>{t("Change")}</Text>
       </Pressable>
 
       <SectionLabel>Trip details (optional)</SectionLabel>
@@ -116,14 +117,14 @@ export default function RequestDriver() {
         icon="flag-outline"
         value={where}
         onChangeText={setWhere}
-        placeholder="Where to? e.g. Guntur, hospital"
+        placeholder={t("Where to? e.g. Guntur, hospital")}
         maxLength={120}
       />
       <Field
         icon="chatbubble-ellipses-outline"
         value={note}
         onChangeText={setNote}
-        placeholder="When / how long? e.g. now, 2 days"
+        placeholder={t("When / how long? e.g. now, 2 days")}
         maxLength={150}
       />
 
@@ -132,17 +133,17 @@ export default function RequestDriver() {
         icon="cash-outline"
         value={offer}
         onChangeText={setOffer}
-        placeholder="e.g. 500"
+        placeholder={t("e.g. 500")}
         keyboardType="number-pad"
         maxLength={6}
         error={offerError}
-        hint={`Leave empty to go with ${name}'s prices. ${name} can accept your offer or call you to discuss.`}
+        hint={t("Leave empty to go with {name}'s prices. {name} can accept your offer or call you to discuss.", { name })}
       />
 
       <View style={styles.info}>
         <Ionicons name="call-outline" size={20} color={colors.textMuted} />
         <Text style={[font.small, { flex: 1 }]}>
-          After {name} accepts, call each other to confirm. Pay the driver directly by cash or UPI.
+          {t("After {name} accepts, call each other to confirm. Pay the driver directly by cash or UPI.", { name })}
         </Text>
       </View>
     </Screen>

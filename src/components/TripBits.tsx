@@ -3,6 +3,7 @@ import { Image, Pressable, StyleSheet, Text, View } from "react-native";
 import { initials, STATUS_LABEL } from "@/lib/format";
 import type { TripStatus } from "@/lib/types";
 import { colors, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Pickup ● and drop ■ addresses joined by a line. */
 export function Route({ pickup, drop, dropFallback }: { pickup: string; drop?: string | null; dropFallback?: string }) {
@@ -76,7 +77,7 @@ export function Stars({
           key={n}
           disabled={!onChange}
           accessibilityRole="button"
-          accessibilityLabel={`${n} star${n > 1 ? "s" : ""}`}
+          accessibilityLabel={t("{n} stars", { n })}
           onPress={() => onChange?.(n)}
           hitSlop={6}
         >
@@ -88,7 +89,7 @@ export function Stars({
 }
 
 export function RatingText({ avg, count }: { avg: number; count: number }) {
-  if (!count) return <Text style={styles.ratingNew}>New driver</Text>;
+  if (!count) return <Text style={styles.ratingNew}>{t("New driver")}</Text>;
   return (
     <View style={{ flexDirection: "row", alignItems: "center", gap: 4 }}>
       <Ionicons name="star" size={15} color="#F5A623" />

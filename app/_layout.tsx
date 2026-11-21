@@ -2,7 +2,9 @@ import * as Notifications from "expo-notifications";
 import { router, Stack } from "expo-router";
 import * as SplashScreen from "expo-splash-screen";
 import { StatusBar } from "expo-status-bar";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
+import { View } from "react-native";
+import { loadLanguage, useLanguage } from "@/i18n";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { startAds } from "@/components/AdBanner";
 import { AuthProvider, useAuth } from "@/lib/auth";
@@ -42,13 +44,25 @@ function NotificationRouter() {
 }
 
 export default function RootLayout() {
+  const lang = useLanguage();
+  const [langReady, setLangReady] = useState(false);
+
+  useEffect(() => {
+    loadLanguage().finally(() => setLangReady(true));
+  }, []);
+
+  if (!langReady) return null; // splash screen is still showing
+
   return (
     <SafeAreaProvider>
       <AuthProvider>
         <StatusBar style="dark" />
         <NotificationRouter />
+        {/* key = language: every screen redraws in the new language */}
+        <View key={lang} style={{ flex: 1 }}>
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
           <Stack.Screen name="index" />
+          <Stack.Screen name="language" options={{ gestureEnabled: false }} />
           <Stack.Screen name="welcome" options={{ gestureEnabled: false }} />
           <Stack.Screen name="location" options={{ gestureEnabled: false }} />
           <Stack.Screen name="setup" />
@@ -63,6 +77,7 @@ export default function RootLayout() {
           <Stack.Screen name="trip/[id]" options={{ gestureEnabled: false }} />
           <Stack.Screen name="drive/[id]" options={{ gestureEnabled: false }} />
         </Stack>
+        </View>
       </AuthProvider>
     </SafeAreaProvider>
   );

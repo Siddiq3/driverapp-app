@@ -4,6 +4,7 @@ import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, type MapViewProps } from "react-native-maps";
 import { colors } from "@/theme";
 import type { LatLng } from "@/lib/types";
+import { t } from "@/i18n";
 
 // A calm, grey map style so the app's black buttons stand out (Google Maps on Android).
 const quietStyle = [
@@ -81,7 +82,7 @@ export function Map({ center, pickup, drop, bottomInset = 0, nearby, style, ...r
           coordinate={{ latitude: d.lat, longitude: d.lng }}
           anchor={{ x: 0.5, y: 0.5 }}
           tracksViewChanges={false}
-          accessibilityLabel={d.has_car ? "Free car nearby" : "Free driver nearby"}
+          accessibilityLabel={d.has_car ? t("Free car nearby") : t("Free driver nearby")}
         >
           <View style={styles.nearby}>
             <Ionicons name={d.has_car ? "car" : "person"} size={16} color={colors.white} />
@@ -89,12 +90,12 @@ export function Map({ center, pickup, drop, bottomInset = 0, nearby, style, ...r
         </Marker>
       ))}
       {pickup && (
-        <Marker coordinate={{ latitude: pickup.lat, longitude: pickup.lng }} title="Pickup" tracksViewChanges={false}>
+        <Marker coordinate={{ latitude: pickup.lat, longitude: pickup.lng }} title={t("Pickup")} tracksViewChanges={false}>
           <View style={styles.pickup} />
         </Marker>
       )}
       {drop && (
-        <Marker coordinate={{ latitude: drop.lat, longitude: drop.lng }} title="Drop" tracksViewChanges={false}>
+        <Marker coordinate={{ latitude: drop.lat, longitude: drop.lng }} title={t("Drop")} tracksViewChanges={false}>
           <View style={styles.drop} />
         </Marker>
       )}

@@ -16,6 +16,7 @@ import { useOnAppActive } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { Trip, TripPerson } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 const NEXT: Partial<Record<Trip["status"], { status: "arrived" | "started" | "completed"; label: string; ask: string }>> = {
   accepted: { status: "arrived", label: "I have arrived", ask: "Are you at the pickup point?" },
@@ -43,7 +44,7 @@ export default function DriverTrip() {
   useEffect(() => {
     load();
     if (!id) return;
-    return api.watchTrip(id, (t) => setTrip((old) => ({ ...(old ?? t), ...t })));
+    return api.watchTrip(id, (fresh) => setTrip((old) => ({ ...(old ?? fresh), ...fresh })));
   }, [id, load]);
   useOnAppActive(load);
 
@@ -53,7 +54,7 @@ export default function DriverTrip() {
     }
   }, [trip?.customer_id, customer?.id]);
 
-  if (!trip) return <Loading label="Loading trip…" />;
+  if (!trip) return <Loading label={t("Loading trip…")} />;
 
   const pickup = { lat: trip.pickup_lat, lng: trip.pickup_lng };
   const drop = trip.drop_lat != null && trip.drop_lng != null ? { lat: trip.drop_lat, lng: trip.drop_lng } : null;
@@ -67,7 +68,7 @@ export default function DriverTrip() {
       setAskPin(true);
       return;
     }
-    if (!(await confirm(next.label, next.ask, "Yes"))) return;
+    if (!(await confirm(t(next.label), t(next.ask), t("Yes")))) return;
     setBusy(true);
     try {
       await api.updateTripStatus(trip.id, next.status);
@@ -86,14 +87,14 @@ export default function DriverTrip() {
       setAskPin(false);
       await load();
     } catch (err) {
-      showError(err, "Could not start");
+      showError(err, t("Could not start"));
     } finally {
       setBusy(false);
     }
   };
 
   const cancel = async () => {
-    if (!(await confirm("Cancel this trip?", "The customer is waiting for you. Cancel only if you really cannot come.", "Cancel trip", true))) return;
+    if (!(await confirm(t("Cancel this trip?"), t("The customer is waiting for you. Cancel only if you really cannot come."), t("Cancel trip"), true))) return;
     setBusy(true);
     try {
       await api.cancelTrip(trip.id, "Driver cancelled");
@@ -107,21 +108,21 @@ export default function DriverTrip() {
   };
 
   const sos = () => {
-    Alert.alert("Emergency?", "We will alert our team. You can also call 112.", [
-      { text: "Close", style: "cancel" },
+    Alert.alert(t("Emergency?"), t("We will alert our team. You can also call 112."), [
+      { text: t("Close"), style: "cancel" },
       {
-        text: "Alert team",
+        text: t("Alert team"),
         onPress: async () => {
           try {
             const pos = await getCurrentPosition().catch(() => undefined);
             await api.triggerSos(trip.id, pos);
-            Alert.alert("Team alerted", "We will call you right away.");
+            Alert.alert("Team alerted", t("We will call you right away."));
           } catch (err) {
             showError(err);
           }
         },
       },
-      { text: "Call 112", style: "destructive", onPress: () => Linking.openURL("tel:112") },
+      { text: t("Call 112"), style: "destructive", onPress: () => Linking.openURL("tel:112") },
     ]);
   };
 
@@ -131,8 +132,8 @@ export default function DriverTrip() {
     <View style={{ flex: 1 }}>
       <Map pickup={pickup} drop={drop} bottomInset={380} />
       <SafeAreaView edges={["top"]} style={styles.topBar} pointerEvents="box-none">
-        <IconButton icon="arrow-back" label="Back" background={colors.white} onPress={() => router.replace("/driver/home")} />
-        {live && <IconButton icon="alert-circle" label="SOS" background={colors.red} color={colors.white} onPress={sos} />}
+        <IconButton icon="arrow-back" label={t("Back")} background={colors.white} onPress={() => router.replace("/driver/home")} />
+        {live && <IconButton icon="alert-circle" label={t("SOS")} background={colors.red} color={colors.white} onPress={sos} />}
       </SafeAreaView>
 
       <BottomSheet>
@@ -140,7 +141,7 @@ export default function DriverTrip() {
           <View>
             <View style={styles.headRow}>
               <Text style={font.heading}>
-                {trip.status === "accepted" ? "Go to pickup" : trip.status === "arrived" ? "Waiting for customer" : "On trip"}
+                {trip.status === "accepted" ? t("Go to pickup") : trip.status === "arrived" ? t("Waiting for customer") : t("On trip")}
               </Text>
             </View>
             <Text style={[font.small, { marginBottom: space.md }]}>
@@ -157,15 +158,15 @@ export default function DriverTrip() {
             <View style={styles.personCard}>
               <Avatar name={customer?.full_name} url={customer?.avatar_url} size={52} />
               <View style={{ flex: 1 }}>
-                <Text style={font.subheading}>{customer?.full_name ?? "Customer"}</Text>
+                <Text style={font.subheading}>{customer?.full_name ?? t("Customer")}</Text>
                 <Text style={font.small}>
-                  {trip.customer_offer ? `Offered ${rupees(trip.customer_offer)} · confirm on call` : "Your prices · confirm on call"}
+                  {trip.customer_offer ? t("Offered {price} · confirm on call", { price: rupees(trip.customer_offer) }) : t("Your prices · confirm on call")}
                 </Text>
               </View>
-              <IconButton icon="call" label="Call customer" background={colors.black} color={colors.white} size={52} onPress={() => callNumber(customer?.phone)} />
+              <IconButton icon="call" label={t("Call customer")} background={colors.black} color={colors.white} size={52} onPress={() => callNumber(customer?.phone)} />
             </View>
 
-            <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? `${trip.hours} hours of driving` : undefined} />
+            <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? t("{hours} hours of driving", { hours: trip.hours }) : undefined} />
 
             {trip.customer_note && (
               <View style={styles.note}>
@@ -176,7 +177,7 @@ export default function DriverTrip() {
 
             <View style={styles.row}>
               <Button
-                title={trip.status === "started" && drop ? "Navigate to drop" : "Navigate to pickup"}
+                title={trip.status === "started" && drop ? t("Navigate to drop") : t("Navigate to pickup")}
                 icon="navigate"
                 variant="secondary"
                 size="md"
@@ -187,7 +188,7 @@ export default function DriverTrip() {
 
             {next && (
               <Button
-                title={next.label}
+                title={t(next.label)}
                 variant={next.status === "completed" ? "success" : "primary"}
                 onPress={advance}
                 loading={busy}
@@ -195,7 +196,7 @@ export default function DriverTrip() {
               />
             )}
             {trip.status !== "started" && (
-              <Button title="Cancel trip" variant="ghost" size="md" onPress={cancel} disabled={busy} />
+              <Button title={t("Cancel trip")} variant="ghost" size="md" onPress={cancel} disabled={busy} />
             )}
           </View>
         )}
@@ -209,11 +210,11 @@ export default function DriverTrip() {
             <Text style={[font.heading, { textAlign: "center" }]}>
               {trip.status === "cancelled"
                 ? trip.cancelled_by === trip.driver_id
-                  ? "You cancelled this trip"
-                  : "Customer cancelled the trip"
-                : "This trip is no longer available"}
+                  ? t("You cancelled this trip")
+                  : t("Customer cancelled the trip")
+                : t("This trip is no longer available")}
             </Text>
-            <Button title="Back to home" onPress={() => router.replace("/driver/home")} style={{ marginTop: space.xl }} />
+            <Button title={t("Back to home")} onPress={() => router.replace("/driver/home")} style={{ marginTop: space.xl }} />
           </View>
         )}
       </BottomSheet>
@@ -228,24 +229,24 @@ function PinPrompt({ busy, onCancel, onSubmit }: { busy: boolean; onCancel: () =
     <Modal visible transparent animationType="fade" onRequestClose={onCancel}>
       <View style={styles.modalBack}>
         <View style={styles.modalCard}>
-          <Text style={[font.heading, { textAlign: "center" }]}>Enter ride PIN</Text>
+          <Text style={[font.heading, { textAlign: "center" }]}>{t("Enter ride PIN")}</Text>
           <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>
-            Ask the customer for the 4-digit PIN in their app.
+            {t("Ask the customer for the 4-digit PIN in their app.")}
           </Text>
           <TextInput
             value={pin}
-            onChangeText={(t) => setPin(t.replace(/\D/g, "").slice(0, 4))}
+            onChangeText={(text) => setPin(text.replace(/\D/g, "").slice(0, 4))}
             keyboardType="number-pad"
             maxLength={4}
             autoFocus
             style={styles.pinInput}
             placeholder="• • • •"
             placeholderTextColor={colors.textFaint}
-            accessibilityLabel="Ride PIN"
+            accessibilityLabel={t("Ride PIN")}
             onSubmitEditing={() => pin.length === 4 && onSubmit(pin)}
           />
-          <Button title="Start trip" onPress={() => onSubmit(pin)} loading={busy} disabled={pin.length !== 4} />
-          <Button title="Cancel" variant="ghost" size="md" onPress={onCancel} disabled={busy} />
+          <Button title={t("Start trip")} onPress={() => onSubmit(pin)} loading={busy} disabled={pin.length !== 4} />
+          <Button title={t("Cancel")} variant="ghost" size="md" onPress={onCancel} disabled={busy} />
         </View>
       </View>
     </Modal>
@@ -285,20 +286,20 @@ function RateCustomer({ trip, customer }: { trip: Trip; customer: TripPerson | n
       <View style={styles.doneIcon}>
         <Ionicons name="checkmark" size={36} color={colors.white} />
       </View>
-      <Text style={[font.heading, { textAlign: "center" }]}>Trip completed</Text>
-      <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>Collect the agreed price by cash or UPI.</Text>
+      <Text style={[font.heading, { textAlign: "center" }]}>{t("Trip completed")}</Text>
+      <Text style={[font.small, { textAlign: "center", marginTop: space.xs }]}>{t("Collect the agreed price by cash or UPI.")}</Text>
 
       {done === false && (
         <>
           <Text style={[font.subheading, { textAlign: "center", marginVertical: space.md }]}>
-            Rate {customer?.full_name?.split(" ")[0] ?? "the customer"}
+            {t("Rate {name}", { name: customer?.full_name?.split(" ")[0] ?? t("the customer") })}
           </Text>
           <Stars value={stars} onChange={setStars} />
         </>
       )}
 
-      <Button title="Go free for next trip" variant="success" onPress={() => finish(true)} loading={busy} style={{ marginTop: space.xl }} />
-      <Button title="Stay busy" variant="ghost" size="md" onPress={() => finish(false)} disabled={busy} />
+      <Button title={t("Go free for next trip")} variant="success" onPress={() => finish(true)} loading={busy} style={{ marginTop: space.xl }} />
+      <Button title={t("Stay busy")} variant="ghost" size="md" onPress={() => finish(false)} disabled={busy} />
     </View>
   );
 }

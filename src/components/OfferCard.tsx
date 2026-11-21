@@ -8,6 +8,7 @@ import { mmss, rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/fo
 import { useSecondsLeft } from "@/lib/hooks";
 import type { Trip } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Full-screen new trip request for drivers: what, where, Accept / Skip. */
 export function OfferCard({
@@ -39,8 +40,8 @@ export function OfferCard({
     SERVICE_LABEL[trip.service_type],
     TRIP_LABEL[trip.trip_type],
     trip.vehicle_type ? VEHICLE_LABEL[trip.vehicle_type] : null,
-    trip.hours ? `${trip.hours} hrs` : null,
-    trip.distance_km ? `${trip.distance_km} km trip` : null,
+    trip.hours ? t("{hours} hrs", { hours: trip.hours }) : null,
+    trip.distance_km ? t("{km} km trip", { km: trip.distance_km }) : null,
   ].filter(Boolean);
 
   return (
@@ -48,7 +49,7 @@ export function OfferCard({
       <View style={styles.backdrop}>
         <View style={styles.card}>
           <View style={styles.headRow}>
-            <Text style={styles.newLabel}>{trip.requested_driver_id ? "A CUSTOMER CHOSE YOU" : "NEW TRIP"}</Text>
+            <Text style={styles.newLabel}>{trip.requested_driver_id ? t("A CUSTOMER CHOSE YOU") : t("NEW TRIP")}</Text>
             <View style={styles.timer}>
               <Ionicons name="time-outline" size={16} color={colors.white} />
               <Text style={styles.timerText}>{mmss(left)}</Text>
@@ -59,21 +60,21 @@ export function OfferCard({
           {details.length > 2 && <Text style={font.small}>{details.slice(2).join(" · ")}</Text>}
           {trip.customer_offer ? (
             <View style={styles.offer}>
-              <Text style={styles.offerLabel}>Customer offers</Text>
+              <Text style={styles.offerLabel}>{t("Customer offers")}</Text>
               <Text style={styles.offerValue}>{rupees(trip.customer_offer)}</Text>
             </View>
           ) : (
-            <Text style={[font.small, { marginTop: 4 }]}>Customer will go with your prices. Confirm on call.</Text>
+            <Text style={[font.small, { marginTop: 4 }]}>{t("Customer will go with your prices. Confirm on call.")}</Text>
           )}
 
           <View style={styles.away}>
             <Ionicons name="navigate" size={20} color={colors.black} />
             <Text style={font.bodyStrong}>
-              {distanceKm != null ? `${distanceKm} km from you` : "Near you"}
+              {distanceKm != null ? t("{km} km from you", { km: distanceKm }) : t("Near you")}
             </Text>
           </View>
 
-          <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? `${trip.hours} hours of driving` : undefined} />
+          <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? t("{hours} hours of driving", { hours: trip.hours }) : undefined} />
 
           {trip.customer_note && (
             <View style={styles.note}>
@@ -82,8 +83,8 @@ export function OfferCard({
             </View>
           )}
 
-          <Button title="Accept trip" variant="success" onPress={onAccept} loading={accepting} style={{ marginTop: space.xl }} />
-          <Button title="Skip" variant="ghost" size="md" onPress={onSkip} disabled={accepting} />
+          <Button title={t("Accept trip")} variant="success" onPress={onAccept} loading={accepting} style={{ marginTop: space.xl }} />
+          <Button title={t("Skip")} variant="ghost" size="md" onPress={onSkip} disabled={accepting} />
         </View>
       </View>
     </Modal>

@@ -3,10 +3,11 @@ import { useEffect, useState } from "react";
 import { Loading } from "@/components/Screen";
 import { homeRouteFor, useAuth } from "@/lib/auth";
 import { locationAccess, type LocationAccess } from "@/lib/location";
+import { hasChosenLanguage } from "@/i18n";
 
 /**
  * Sends each person to the right place when the app opens:
- * not signed in → welcome · no location permission → location · then setup / home.
+ * no language yet → language · not signed in → welcome · no location permission → location · then setup / home.
  */
 export default function Index() {
   const { ready, session, profile, driver } = useAuth();
@@ -19,6 +20,7 @@ export default function Index() {
       .catch(() => setAccess("granted")); // never trap the user on an error
   }, [session]);
 
+  if (!hasChosenLanguage()) return <Redirect href="/language" />;
   if (!ready) return <Loading />;
   if (!session) return <Redirect href="/welcome" />;
   if (!access) return <Loading />;

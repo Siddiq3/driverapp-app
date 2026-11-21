@@ -2,6 +2,7 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import mobileAds, { BannerAd, BannerAdSize, TestIds } from "react-native-google-mobile-ads";
 import { colors, space } from "@/theme";
+import { t } from "@/i18n";
 
 // v1 earns from ads only. Google test ads are used until real IDs are set in .env.
 const UNIT_ID = process.env.EXPO_PUBLIC_ADMOB_BANNER_ID || TestIds.ADAPTIVE_BANNER;
@@ -22,7 +23,7 @@ export function AdBanner({ label = true }: { label?: boolean }) {
   if (failed) return null;
   return (
     <View style={styles.wrap}>
-      {label && <Text style={styles.label}>Ad</Text>}
+      {label && <Text style={styles.label}>{t("Ad")}</Text>}
       <BannerAd
         unitId={UNIT_ID}
         size={BannerAdSize.ANCHORED_ADAPTIVE_BANNER}

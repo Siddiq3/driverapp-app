@@ -8,6 +8,7 @@ import { useAuth } from "@/lib/auth";
 import { useOnAppActive } from "@/lib/hooks";
 import { askLocation, locationAccess, type LocationAccess } from "@/lib/location";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Shown right after login until the person allows location. */
 export default function LocationPermission() {
@@ -43,24 +44,24 @@ export default function LocationPermission() {
         <View style={styles.icon}>
           <Ionicons name="location" size={56} color={colors.white} />
         </View>
-        <Text style={[font.title, styles.center]}>Allow your location</Text>
+        <Text style={[font.title, styles.center]}>{t("Allow your location")}</Text>
         <Text style={[font.body, styles.center, { color: colors.textMuted, marginTop: space.md }]}>
           {isDriver
-            ? "So we can send you trips from customers near you."
-            : "So we can show free drivers near you and fill your pickup point."}
+            ? t("So we can send you trips from customers near you.")
+            : t("So we can show free drivers near you and fill your pickup point.")}
         </Text>
 
         <View style={styles.points}>
-          <Point icon="car" text={isDriver ? "Get trips close to you" : "See drivers around you"} />
-          <Point icon="flash" text={isDriver ? "Less driving to reach customers" : "Faster pickup"} />
-          <Point icon="lock-closed" text="Used only while the app is open" />
+          <Point icon="car" text={isDriver ? t("Get trips close to you") : t("See drivers around you")} />
+          <Point icon="flash" text={isDriver ? t("Less driving to reach customers") : t("Faster pickup")} />
+          <Point icon="lock-closed" text={t("Used only while the app is open")} />
         </View>
 
         {state === "blocked" && (
           <View style={styles.warn}>
             <Ionicons name="settings-outline" size={20} color={colors.amber} />
             <Text style={styles.warnText}>
-              Location is turned off for this app. Tap "Open settings", then Permissions → Location → Allow.
+              {t("Location is turned off for this app. Tap \"Open settings\", then Permissions → Location → Allow.")}
             </Text>
           </View>
         )}
@@ -68,9 +69,9 @@ export default function LocationPermission() {
 
       <View style={styles.footer}>
         {state === "blocked" ? (
-          <Button title="Open settings" icon="settings" onPress={() => Linking.openSettings()} />
+          <Button title={t("Open settings")} icon="settings" onPress={() => Linking.openSettings()} />
         ) : (
-          <Button title="Allow location" icon="location" onPress={allow} loading={busy} />
+          <Button title={t("Allow location")} icon="location" onPress={allow} loading={busy} />
         )}
       </View>
     </SafeAreaView>

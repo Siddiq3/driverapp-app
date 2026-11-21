@@ -1,5 +1,6 @@
 import * as Location from "expo-location";
 import type { LatLng, Place } from "./types";
+import { t } from "@/i18n";
 
 export class LocationError extends Error {}
 
@@ -23,11 +24,11 @@ export async function askLocation(): Promise<LocationAccess> {
 export async function getCurrentPosition(): Promise<LatLng> {
   const { status } = await Location.requestForegroundPermissionsAsync();
   if (status !== "granted") {
-    throw new LocationError("Please allow location so we can find drivers near you.");
+    throw new LocationError(t("Please allow location so we can find drivers near you."));
   }
   const servicesOn = await Location.hasServicesEnabledAsync();
   if (!servicesOn) {
-    throw new LocationError("Please turn on Location (GPS) in your phone settings.");
+    throw new LocationError(t("Please turn on Location (GPS) in your phone settings."));
   }
 
   // Use a recent cached fix first for speed, then a fresh one.
@@ -42,13 +43,13 @@ export async function getCurrentPosition(): Promise<LatLng> {
 export async function addressFor(pos: LatLng): Promise<string> {
   try {
     const [r] = await Location.reverseGeocodeAsync({ latitude: pos.lat, longitude: pos.lng });
-    if (!r) return "Current location";
+    if (!r) return t("Current location");
     const parts = [r.name !== r.street ? r.name : null, r.street, r.district ?? r.subregion, r.city]
       .filter((p): p is string => !!p && p.trim().length > 0 && !/^\d+$/.test(p));
     const unique = parts.filter((p, i) => parts.indexOf(p) === i);
-    return unique.slice(0, 3).join(", ") || "Current location";
+    return unique.slice(0, 3).join(", ") || t("Current location");
   } catch {
-    return "Current location";
+    return t("Current location");
   }
 }
 

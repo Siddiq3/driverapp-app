@@ -3,6 +3,7 @@ import * as Device from "expo-device";
 import * as Notifications from "expo-notifications";
 import { Platform } from "react-native";
 import { updateMyProfile } from "./api";
+import { t } from "@/i18n";
 
 // Show notifications even when the app is open.
 Notifications.setNotificationHandler({
@@ -18,14 +19,14 @@ async function createChannels() {
   if (Platform.OS !== "android") return;
   // Loud, high-priority channel so drivers notice new trips while driving.
   await Notifications.setNotificationChannelAsync("trip-requests", {
-    name: "New trip requests",
+    name: t("New trip requests"),
     importance: Notifications.AndroidImportance.MAX,
     sound: "default",
     vibrationPattern: [0, 500, 250, 500, 250, 500],
     lockscreenVisibility: Notifications.AndroidNotificationVisibility.PUBLIC,
   });
   await Notifications.setNotificationChannelAsync("trip-updates", {
-    name: "Trip updates",
+    name: t("Trip updates"),
     importance: Notifications.AndroidImportance.HIGH,
     sound: "default",
   });

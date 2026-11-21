@@ -13,6 +13,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { colors, font, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Standard page: safe area, optional back button + title, scrolling content, sticky footer. */
 export function Screen({
@@ -37,7 +38,7 @@ export function Screen({
           {back && (
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel="Go back"
+              accessibilityLabel={t("Go back")}
               hitSlop={12}
               onPress={() => (router.canGoBack() ? router.back() : router.replace("/"))}
               style={styles.back}

@@ -7,6 +7,7 @@ import { Button } from "@/components/Button";
 import { useAuth } from "@/lib/auth";
 import { showError } from "@/lib/alert";
 import { colors, space } from "@/theme";
+import { t } from "@/i18n";
 
 export default function Welcome() {
   const { signInWithGoogle } = useAuth();
@@ -30,25 +31,25 @@ export default function Welcome() {
         <View style={styles.logo}>
           <Ionicons name="car-sport" size={44} color={colors.black} />
         </View>
-        <Text style={styles.brand}>DriverApp</Text>
-        <Text style={styles.tagline}>A car or a driver,{"\n"}in a few minutes.</Text>
+        <Text style={styles.brand}>{t("DriverApp")}</Text>
+        <Text style={styles.tagline}>{t("A car or a driver,\nin a few minutes.")}</Text>
 
         <View style={styles.points}>
-          <Point icon="flash" text="No more calling driver after driver" />
-          <Point icon="shield-checkmark" text="Every driver is checked by us" />
-          <Point icon="people" text="See who is free near you, right now" />
+          <Point icon="flash" text={t("No more calling driver after driver")} />
+          <Point icon="shield-checkmark" text={t("Every driver is checked by us")} />
+          <Point icon="people" text={t("See who is free near you, right now")} />
         </View>
       </View>
 
       <View style={styles.bottom}>
         <Button
-          title="Continue with Google"
+          title={t("Continue with Google")}
           icon="logo-google"
           variant="secondary"
           onPress={onGoogle}
           loading={busy}
         />
-        <Text style={styles.legal}>By continuing you agree to our Terms and Privacy Policy.</Text>
+        <Text style={styles.legal}>{t("By continuing you agree to our Terms and Privacy Policy.")}</Text>
       </View>
     </SafeAreaView>
   );

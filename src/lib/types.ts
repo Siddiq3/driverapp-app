@@ -23,6 +23,7 @@ export type Profile = {
   is_admin: boolean;
   push_token: string | null;
   avatar_url: string | null;
+  language: string;
 };
 
 export type Driver = {

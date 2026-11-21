@@ -3,6 +3,7 @@ import * as Haptics from "expo-haptics";
 import type { ReactNode } from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { colors, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** Pill tabs, e.g. In town / Outstation / By hours. */
 export function Segmented<T extends string>({
@@ -96,7 +97,7 @@ export function Stepper({
   const btn = (icon: "remove" | "add", next: number, disabled: boolean) => (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={icon === "add" ? `More ${unit}` : `Fewer ${unit}`}
+      accessibilityLabel={icon === "add" ? t("More") : t("Less")}
       disabled={disabled}
       onPress={() => {
         Haptics.selectionAsync().catch(() => undefined);
@@ -111,7 +112,7 @@ export function Stepper({
     <View style={styles.stepper}>
       {btn("remove", value - 1, value <= min)}
       <Text style={styles.stepValue}>
-        {value} {unit}
+        {value} {t(unit)}
       </Text>
       {btn("add", value + 1, value >= max)}
     </View>

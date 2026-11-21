@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { parseRupees, VEHICLE_HINT, VEHICLE_LABEL } from "@/lib/format";
 import type { VehicleType } from "@/lib/types";
 import { font, space } from "@/theme";
+import { t } from "@/i18n";
 
 export default function DriverRegister() {
   const { driver, refresh } = useAuth();
@@ -30,12 +31,12 @@ export default function DriverRegister() {
   const submit = async () => {
     const car = hasCar === "yes";
     const next = {
-      licence: licence.trim().length < 6 ? "Enter your driving licence number" : undefined,
-      number: car && number.trim().length < 6 ? "Enter your car number, e.g. AP39AB1234" : undefined,
+      licence: licence.trim().length < 6 ? t("Enter your driving licence number") : undefined,
+      number: car && number.trim().length < 6 ? t("Enter your car number, e.g. AP39AB1234") : undefined,
       price:
         (car && parseRupees(perKm)) || parseRupees(perHour) || parseRupees(perDay)
           ? undefined
-          : "Enter at least one price so customers know your rate",
+          : t("Enter at least one price so customers know your rate"),
     };
     setErrors(next);
     if (next.licence || next.number || next.price) return;
@@ -67,38 +68,38 @@ export default function DriverRegister() {
   return (
     <Screen
       back
-      title="Become a driver"
-      subtitle="We check every driver before they get trips. This keeps customers safe."
-      footer={<Button title="Send for checking" onPress={submit} loading={busy} />}
+      title={t("Become a driver")}
+      subtitle={t("We check every driver before they get trips. This keeps customers safe.")}
+      footer={<Button title={t("Send for checking")} onPress={submit} loading={busy} />}
     >
       <Field
-        label="Driving licence number"
+        label={t("Driving licence number")}
         icon="card-outline"
         value={licence}
         onChangeText={setLicence}
-        placeholder="e.g. AP0920190012345"
+        placeholder={t("e.g. AP0920190012345")}
         autoCapitalize="characters"
         error={errors.licence}
       />
 
-      <SectionLabel>Do you have your own car?</SectionLabel>
+      <SectionLabel>{t("Do you have your own car?")}</SectionLabel>
       <Segmented
         value={hasCar}
         onChange={setHasCar}
         options={[
-          { value: "yes", label: "Yes, I have a car" },
-          { value: "no", label: "No, only driving" },
+          { value: "yes", label: t("Yes, I have a car") },
+          { value: "no", label: t("No, only driving") },
         ]}
       />
       <Text style={[font.small, { marginTop: space.sm }]}>
         {hasCar === "yes"
-          ? "You will get both kinds of trips: with your car, and driving a customer's car."
-          : "You will get trips to drive a customer's own car."}
+          ? t("You will get both kinds of trips: with your car, and driving a customer's car.")
+          : t("You will get trips to drive a customer's own car.")}
       </Text>
 
       {hasCar === "yes" && (
         <View style={{ marginTop: space.lg }}>
-          <SectionLabel>Car type</SectionLabel>
+          <SectionLabel>{t("Car type")}</SectionLabel>
           {(Object.keys(VEHICLE_LABEL) as VehicleType[]).map((v) => (
             <OptionCard
               key={v}
@@ -110,35 +111,35 @@ export default function DriverRegister() {
             />
           ))}
           <View style={{ height: space.md }} />
-          <Field label="Car model" value={model} onChangeText={setModel} placeholder="e.g. Maruti Dzire" />
+          <Field label={t("Car model")} value={model} onChangeText={setModel} placeholder={t("e.g. Maruti Dzire")} />
           <Field
-            label="Car number"
+            label={t("Car number")}
             value={number}
             onChangeText={setNumber}
-            placeholder="e.g. AP39AB1234"
+            placeholder={t("e.g. AP39AB1234")}
             autoCapitalize="characters"
             error={errors.number}
           />
         </View>
       )}
 
-      <SectionLabel>Your prices</SectionLabel>
+      <SectionLabel>{t("Your prices")}</SectionLabel>
       <Text style={[font.small, { marginBottom: space.md }]}>
-        Customers see these on your card. They can also offer their own price — you decide.
+        {t("Customers see these on your card. They can also offer their own price — you decide.")}
       </Text>
       {hasCar === "yes" && (
         <Field
-          label="Price per km, with your car (₹)"
+          label={t("Price per km, with your car (₹)")}
           icon="speedometer-outline"
           value={perKm}
           onChangeText={setPerKm}
-          placeholder="e.g. 12"
+          placeholder={t("e.g. 12")}
           keyboardType="number-pad"
           maxLength={4}
         />
       )}
       <Field
-        label={hasCar === "yes" ? "Price per hour (₹)" : "Price per hour, driving customer's car (₹)"}
+        label={hasCar === "yes" ? t("Price per hour (₹)") : t("Price per hour, driving customer's car (₹)")}
         icon="time-outline"
         value={perHour}
         onChangeText={setPerHour}
@@ -147,7 +148,7 @@ export default function DriverRegister() {
         maxLength={5}
       />
       <Field
-        label="Price per day (₹)"
+        label={t("Price per day (₹)")}
         icon="sunny-outline"
         value={perDay}
         onChangeText={setPerDay}
@@ -157,16 +158,18 @@ export default function DriverRegister() {
         error={errors.price}
       />
       <Field
-        label="Anything else? (optional)"
+        label={t("Anything else? (optional)")}
         icon="information-circle-outline"
         value={rateNote}
         onChangeText={setRateNote}
-        placeholder="e.g. Night charges extra, toll extra"
+        placeholder={t("e.g. Night charges extra, toll extra")}
         maxLength={80}
       />
 
       <Text style={[font.small, { marginTop: space.md }]}>
-        Our team may call you to see your licence{hasCar === "yes" ? ", RC and insurance" : ""} before approving.
+        {hasCar === "yes"
+          ? t("Our team may call you to see your licence, RC and insurance before approving.")
+          : t("Our team may call you to see your licence before approving.")}
       </Text>
     </Screen>
   );

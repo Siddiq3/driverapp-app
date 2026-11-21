@@ -6,6 +6,7 @@ import { openWhatsApp, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { homeRouteFor, useAuth } from "@/lib/auth";
 import { useOnAppActive } from "@/lib/hooks";
+import { t } from "@/i18n";
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? "";
 
@@ -52,31 +53,31 @@ export default function DriverPending() {
         <>
           {SUPPORT ? (
             <Button
-              title="Message us on WhatsApp"
+              title={t("Message us on WhatsApp")}
               icon="logo-whatsapp"
               variant="secondary"
-              onPress={() => openWhatsApp(SUPPORT, `Hi, I am ${profile?.full_name ?? ""}. About my driver account.`)}
+              onPress={() => openWhatsApp(SUPPORT, t("Hi, I am {name}. About my driver account.", { name: profile?.full_name ?? "" }))}
             />
           ) : null}
-          {rejected && <Button title="Edit my details" onPress={() => router.push("/driver-register")} />}
-          <Button title="Book a trip instead" variant="ghost" onPress={switchToCustomer} loading={busy} />
+          {rejected && <Button title={t("Edit my details")} onPress={() => router.push("/driver-register")} />}
+          <Button title={t("Book a trip instead")} variant="ghost" onPress={switchToCustomer} loading={busy} />
         </>
       }
     >
       {blocked ? (
-        <EmptyState icon="lock-closed" title="Account on hold" message="Please contact us to know more." />
+        <EmptyState icon="lock-closed" title={t("Account on hold")} message={t("Please contact us to know more.")} />
       ) : rejected ? (
         <EmptyState
           icon="close-circle"
-          title="Not approved yet"
-          message="Some details could not be checked. Please correct them or message us."
+          title={t("Not approved yet")}
+          message={t("Some details could not be checked. Please correct them or message us.")}
         />
       ) : (
         <EmptyState
           icon="hourglass"
-          title="We are checking your details"
-          message="This usually takes less than a day. We may call you. You will be able to go online once approved."
-          action={<Button title="Check again" variant="secondary" onPress={async () => { try { await check(); } catch (e) { showError(e); } }} />}
+          title={t("We are checking your details")}
+          message={t("This usually takes less than a day. We may call you. You will be able to go online once approved.")}
+          action={<Button title={t("Check again")} variant="secondary" onPress={async () => { try { await check(); } catch (e) { showError(e); } }} />}
         />
       )}
     </Screen>

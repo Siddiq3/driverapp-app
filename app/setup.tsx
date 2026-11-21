@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { normalisePhone } from "@/lib/format";
 import type { UserRole } from "@/lib/types";
 import { font, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** First-time setup (name, phone, customer or driver). Also used to edit the profile. */
 export default function Setup() {
@@ -27,8 +28,8 @@ export default function Setup() {
   const save = async () => {
     const cleanPhone = normalisePhone(phone);
     const next = {
-      name: name.trim().length < 2 ? "Please enter your name" : undefined,
-      phone: cleanPhone ? undefined : "Enter a 10-digit mobile number",
+      name: name.trim().length < 2 ? t("Please enter your name") : undefined,
+      phone: cleanPhone ? undefined : t("Enter a 10-digit mobile number"),
     };
     setErrors(next);
     if (next.name || next.phone) return;
@@ -52,49 +53,49 @@ export default function Setup() {
   return (
     <Screen
       back={editing}
-      title={editing ? "Your details" : "Welcome!"}
-      subtitle={editing ? undefined : "Tell us a little about you."}
-      footer={<Button title={editing ? "Save" : "Continue"} onPress={save} loading={busy} />}
+      title={editing ? t("Your details") : t("Welcome!")}
+      subtitle={editing ? undefined : t("Tell us a little about you.")}
+      footer={<Button title={editing ? t("Save") : t("Continue")} onPress={save} loading={busy} />}
     >
       <Field
-        label="Your name"
+        label={t("Your name")}
         icon="person-outline"
         value={name}
         onChangeText={setName}
-        placeholder="e.g. Ravi Kumar"
+        placeholder={t("e.g. Ravi Kumar")}
         autoCapitalize="words"
         error={errors.name}
       />
       <Field
-        label="Mobile number"
+        label={t("Mobile number")}
         icon="call-outline"
         value={phone}
         onChangeText={setPhone}
-        placeholder="10-digit number"
+        placeholder={t("10-digit number")}
         keyboardType="phone-pad"
         maxLength={14}
         error={errors.phone}
-        hint="Your driver or customer will call you on this number."
+        hint={t("Your driver or customer will call you on this number.")}
       />
 
       {!editing && (
         <>
-          <SectionLabel>How will you use the app?</SectionLabel>
+          <SectionLabel>{t("How will you use the app?")}</SectionLabel>
           <OptionCard
             icon="person"
-            title="I need a car or driver"
-            subtitle="Book trips"
+            title={t("I need a car or driver")}
+            subtitle={t("Book trips")}
             selected={role === "customer"}
             onPress={() => setRole("customer")}
           />
           <OptionCard
             icon="car-sport"
-            title="I am a driver"
-            subtitle="Get trips near you"
+            title={t("I am a driver")}
+            subtitle={t("Get trips near you")}
             selected={role === "driver"}
             onPress={() => setRole("driver")}
           />
-          <Text style={[font.small, { marginTop: space.sm }]}>You can switch later from your account.</Text>
+          <Text style={[font.small, { marginTop: space.sm }]}>{t("You can switch later from your account.")}</Text>
         </>
       )}
     </Screen>

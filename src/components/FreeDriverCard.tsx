@@ -4,12 +4,13 @@ import { Avatar, RatingText } from "@/components/TripBits";
 import { ratesText, VEHICLE_LABEL } from "@/lib/format";
 import type { FreeDriver } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 /** One free driver / car in the "near you" list. */
 export function FreeDriverCard({ driver, onPress }: { driver: FreeDriver; onPress: () => void }) {
   const what = driver.has_car
-    ? [driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] : "Car", driver.vehicle_model].filter(Boolean).join(" · ")
-    : "Driver only (for your car)";
+    ? [driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] : t("Car"), driver.vehicle_model].filter(Boolean).join(" · ")
+    : t("Driver only (for your car)");
 
   // Show the prices that fit what the customer is looking for
   const prices = ratesText({
@@ -21,14 +22,14 @@ export function FreeDriverCard({ driver, onPress }: { driver: FreeDriver; onPres
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={`${driver.full_name ?? "Driver"}, ${what}, ${driver.distance_km} kilometres away`}
+      accessibilityLabel={`${driver.full_name ?? t("Driver")}, ${what}, ${t("{km} km away", { km: driver.distance_km })}`}
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && { backgroundColor: colors.surface }]}
     >
       <Avatar name={driver.full_name} url={driver.avatar_url} size={52} />
       <View style={{ flex: 1 }}>
         <Text style={font.bodyStrong} numberOfLines={1}>
-          {driver.full_name ?? "Driver"}
+          {driver.full_name ?? t("Driver")}
         </Text>
         <View style={styles.line}>
           <Ionicons name={driver.has_car ? "car" : "person"} size={14} color={colors.textMuted} />
@@ -46,9 +47,9 @@ export function FreeDriverCard({ driver, onPress }: { driver: FreeDriver; onPres
         ) : null}
       </View>
       <View style={styles.right}>
-        <Text style={styles.km}>{driver.distance_km} km</Text>
+        <Text style={styles.km}>{t("{km} km", { km: driver.distance_km })}</Text>
         <View style={styles.requestBtn}>
-          <Text style={styles.requestText}>Request</Text>
+          <Text style={styles.requestText}>{t("Request")}</Text>
         </View>
       </View>
     </Pressable>

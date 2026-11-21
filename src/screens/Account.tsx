@@ -11,6 +11,7 @@ import { useAuth } from "@/lib/auth";
 import { ratesText, VEHICLE_LABEL } from "@/lib/format";
 import type { UserRole } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { getLanguage, LANGUAGES, t } from "@/i18n";
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? "";
 
@@ -34,7 +35,7 @@ export function Account({ mode }: { mode: UserRole }) {
   };
 
   const logout = async () => {
-    if (!(await confirm("Sign out?", "You will need to sign in again to book or drive.", "Sign out", true))) return;
+    if (!(await confirm(t("Sign out?"), t("You will need to sign in again to book or drive."), t("Sign out"), true))) return;
     try {
       if (driver?.is_available) await api.setAvailability(false);
     } catch {
@@ -50,48 +51,53 @@ export function Account({ mode }: { mode: UserRole }) {
         <Avatar name={profile?.full_name} url={profile?.avatar_url} size={72} />
         <View style={{ flex: 1 }}>
           <Text style={font.heading}>{profile?.full_name ?? "—"}</Text>
-          <Text style={font.small}>{profile?.phone ?? "No phone added"}</Text>
+          <Text style={font.small}>{profile?.phone ?? t("No phone added")}</Text>
           {mode === "driver" && driver && <RatingText avg={driver.rating_avg} count={driver.rating_count} />}
         </View>
       </View>
 
       {mode === "driver" && driver && (
         <>
-          <SectionLabel>Your driver details</SectionLabel>
+          <SectionLabel>{t("Your driver details")}</SectionLabel>
           <View style={styles.box}>
             <Text style={font.body}>
               {driver.has_car
                 ? `${VEHICLE_LABEL[driver.vehicle_type ?? "hatchback"]} · ${driver.vehicle_model ?? ""} · ${driver.vehicle_number ?? ""}`
-                : "Driving only (no own car)"}
+                : t("Driving only (no own car)")}
             </Text>
             <Text style={[font.small, { marginTop: 4 }]}>Licence: {driver.licence_number}</Text>
             <Text style={[font.small, { marginTop: 4 }]}>
-              Your prices: {ratesText(driver) || "not set"}
+              {t("Your prices")}: {ratesText(driver) || t("not set")}
               {driver.rate_note ? ` · ${driver.rate_note}` : ""}
             </Text>
           </View>
         </>
       )}
 
-      <SectionLabel>Settings</SectionLabel>
-      <Row icon="create-outline" label="Edit name and phone" onPress={() => router.push("/setup?edit=1")} />
-      {mode === "driver" && <Row icon="car-outline" label="Edit car, licence or prices" onPress={() => router.push("/driver-register")} />}
+      <SectionLabel>{t("Settings")}</SectionLabel>
+      <Row
+        icon="language"
+        label={`${t("Language")}: ${LANGUAGES.find((l) => l.code === getLanguage())?.native ?? "English"}`}
+        onPress={() => router.push("/language")}
+      />
+      <Row icon="create-outline" label={t("Edit name and phone")} onPress={() => router.push("/setup?edit=1")} />
+      {mode === "driver" && <Row icon="car-outline" label={t("Edit car, licence or prices")} onPress={() => router.push("/driver-register")} />}
       <Row
         icon="swap-horizontal"
-        label={mode === "driver" ? "Switch to booking trips" : "Switch to driver mode"}
+        label={mode === "driver" ? t("Switch to booking trips") : t("Switch to driver mode")}
         onPress={switchMode}
         disabled={busy}
       />
       {SUPPORT ? (
         <Row
           icon="logo-whatsapp"
-          label="Help on WhatsApp"
-          onPress={() => openWhatsApp(SUPPORT, "Hi, I need help with the app.")}
+          label={t("Help on WhatsApp")}
+          onPress={() => openWhatsApp(SUPPORT, t("Hi, I need help with the app."))}
         />
       ) : null}
-      <Row icon="log-out-outline" label="Sign out" onPress={logout} danger />
+      <Row icon="log-out-outline" label={t("Sign out")} onPress={logout} danger />
 
-      <Text style={styles.version}>Version {Constants.expoConfig?.version ?? "1.0.0"}</Text>
+      <Text style={styles.version}>{t("Version {v}", { v: Constants.expoConfig?.version ?? "1.0.0" })}</Text>
     </Screen>
   );
 }

@@ -1,32 +1,33 @@
+import { translated } from "@/i18n";
 import type { ServiceType, TripStatus, TripType, VehicleType } from "./types";
 
 export const rupees = (n: number | null | undefined) =>
   n == null ? "—" : `₹${Math.round(n).toLocaleString("en-IN")}`;
 
-export const SERVICE_LABEL: Record<ServiceType, string> = {
+export const SERVICE_LABEL: Record<ServiceType, string> = translated({
   car_with_driver: "Car + driver",
   driver_only: "Driver only",
-};
+});
 
-export const TRIP_LABEL: Record<TripType, string> = {
+export const TRIP_LABEL: Record<TripType, string> = translated({
   local: "In town",
   outstation: "Outstation",
   hourly: "By hours",
-};
+});
 
-export const VEHICLE_LABEL: Record<VehicleType, string> = {
+export const VEHICLE_LABEL: Record<VehicleType, string> = translated({
   hatchback: "Small car",
   sedan: "Sedan",
   suv: "SUV / 7 seater",
-};
+});
 
-export const VEHICLE_HINT: Record<VehicleType, string> = {
+export const VEHICLE_HINT: Record<VehicleType, string> = translated({
   hatchback: "4 people · Swift, i20",
   sedan: "4 people · Dzire, Etios",
   suv: "6–7 people · Innova, Ertiga",
-};
+});
 
-export const STATUS_LABEL: Record<TripStatus, string> = {
+export const STATUS_LABEL: Record<TripStatus, string> = translated({
   searching: "Finding driver",
   accepted: "Driver coming",
   arrived: "Driver arrived",
@@ -34,7 +35,7 @@ export const STATUS_LABEL: Record<TripStatus, string> = {
   completed: "Completed",
   cancelled: "Cancelled",
   expired: "No driver found",
-};
+});
 
 /** "₹12/km · ₹200/hr · ₹1,500/day" from a driver's prices. */
 export function ratesText(d: {
@@ -74,7 +75,7 @@ export function mmss(totalSeconds: number): string {
 }
 
 export function firstName(name: string | null | undefined): string {
-  return (name ?? "").trim().split(/\s+/)[0] || "there";
+  return (name ?? "").trim().split(/\s+/)[0] || "";
 }
 
 export function initials(name: string | null | undefined): string {

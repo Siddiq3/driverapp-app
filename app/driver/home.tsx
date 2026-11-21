@@ -16,6 +16,7 @@ import { useForegroundInterval } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { LatLng, Trip } from "@/lib/types";
 import { colors, font, radius, shadow, space } from "@/theme";
+import { t } from "@/i18n";
 
 const LOCATION_EVERY_MS = 2 * 60 * 1000; // send location every 2 minutes while Free
 const OFFERS_POLL_MS = 20 * 1000; // backup check in case a live update is missed
@@ -116,7 +117,7 @@ export default function DriverHome() {
         setOffers([]);
         router.push(`/drive/${offer.trip.id}`);
       } else {
-        Alert.alert("Trip taken", "Another driver accepted this trip first. Stay online for the next one.");
+        Alert.alert("Trip taken", t("Another driver accepted this trip first. Stay online for the next one."));
         loadOffers();
       }
     } catch (err) {
@@ -148,11 +149,11 @@ export default function DriverHome() {
       <SafeAreaView edges={["top"]} style={styles.top} pointerEvents="box-none">
         <View style={[styles.statusPill, { backgroundColor: online ? colors.green : colors.black }]}>
           <View style={[styles.statusDot, { backgroundColor: online ? colors.white : colors.textFaint }]} />
-          <Text style={styles.statusText}>{online ? "You are FREE" : "You are BUSY"}</Text>
+          <Text style={styles.statusText}>{online ? t("You are FREE") : t("You are BUSY")}</Text>
         </View>
         <IconButton
           icon="locate"
-          label="Show my location"
+          label={t("Show my location")}
           background={colors.white}
           onPress={() => getCurrentPosition().then(setHere).catch((e) => showError(e))}
         />
@@ -164,7 +165,7 @@ export default function DriverHome() {
             <Ionicons name="car-sport" size={28} color={colors.white} />
             <View style={{ flex: 1 }}>
               <Text style={[font.bodyStrong, { color: colors.white }]}>{STATUS_LABEL[active.status]}</Text>
-              <Text style={{ color: "#CFCFCF", fontSize: 15 }}>Tap to open your current trip</Text>
+              <Text style={{ color: "#CFCFCF", fontSize: 15 }}>{t("Tap to open your current trip")}</Text>
             </View>
             <Ionicons name="chevron-forward" size={24} color={colors.white} />
           </Pressable>
@@ -172,9 +173,9 @@ export default function DriverHome() {
           <>
             <View style={styles.headRow}>
               <View style={{ flex: 1 }}>
-                <Text style={font.heading}>Hi {firstName(profile?.full_name)}</Text>
+                <Text style={font.heading}>{t("Hi {name}", { name: firstName(profile?.full_name) })}</Text>
                 <Text style={font.small}>
-                  {online ? "Waiting for trips near you…" : "Go free to start getting trips."}
+                  {online ? t("Waiting for trips near you…") : t("Go free to start getting trips.")}
                 </Text>
               </View>
               {driver && <RatingText avg={driver.rating_avg} count={driver.rating_count} />}
@@ -184,13 +185,13 @@ export default function DriverHome() {
               <View style={styles.warn}>
                 <Ionicons name="alert-circle" size={20} color={colors.amber} />
                 <Text style={styles.warnText}>
-                  We set you to Busy because 3 requests were not answered. Go free again when you're ready.
+                  {t("We set you to Busy because 3 requests were not answered. Go free again when you're ready.")}
                 </Text>
               </View>
             )}
 
             <Button
-              title={online ? "Go busy (stop trips)" : "Go free (get trips)"}
+              title={online ? t("Go busy (stop trips)") : t("Go free (get trips)")}
               icon={online ? "pause" : "power"}
               variant={online ? "secondary" : "success"}
               onPress={toggle}

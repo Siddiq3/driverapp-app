@@ -14,6 +14,7 @@ import { VEHICLE_HINT } from "@/lib/format";
 import { distanceKm, roadKm } from "@/lib/location";
 import type { ServiceType, TripType, VehicleType } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 const OUTSTATION_KM = 40; // longer than this = outstation fare
 
@@ -70,10 +71,10 @@ export default function Ride() {
   const etaFor = (o: Option): string => {
     if (!pickup || nearby == null) return "";
     const matching = nearby.filter((d) => (o.service === "driver_only" ? true : d.has_car && d.vehicle_type === o.vehicle));
-    if (matching.length === 0) return "Busy now";
+    if (matching.length === 0) return t("Busy now");
     const nearest = Math.min(...matching.map((d) => distanceKm(d, pickup)));
     const mins = Math.max(2, Math.round((nearest * 1.3) / 25 * 60) + 2); // ~25 km/h in town
-    return `${mins} min away`;
+    return t("{min} min away", { min: mins });
   };
 
   const chosen = options.find((o) => o.key === selected) ?? options[0];
@@ -81,8 +82,8 @@ export default function Ride() {
   if (!pickup) {
     return (
       <SafeAreaView style={styles.center}>
-        <Text style={font.heading}>Choose a pickup first</Text>
-        <Button title="Back" onPress={() => router.back()} style={{ marginTop: space.xl, alignSelf: "stretch" }} />
+        <Text style={font.heading}>{t("Choose a pickup first")}</Text>
+        <Button title={t("Back")} onPress={() => router.back()} style={{ marginTop: space.xl, alignSelf: "stretch" }} />
       </SafeAreaView>
     );
   }
@@ -106,7 +107,7 @@ export default function Ride() {
       }
       router.push(`/trip/${res.trip_id}`);
     } catch (err) {
-      showError(err, "Could not book");
+      showError(err, t("Could not book"));
     } finally {
       setBooking(false);
     }
@@ -116,11 +117,11 @@ export default function Ride() {
     <View style={{ flex: 1 }}>
       <Map pickup={pickup} drop={drop} bottomInset={480} />
       <SafeAreaView edges={["top"]} style={styles.topBar} pointerEvents="box-none">
-        <IconButton icon="arrow-back" label="Back" background={colors.white} onPress={() => router.back()} />
+        <IconButton icon="arrow-back" label={t("Back")} background={colors.white} onPress={() => router.back()} />
         {km != null && (
           <View style={styles.kmPill}>
             <Text style={styles.kmText}>
-              {km} km{tripType === "outstation" ? " · Outstation" : ""}
+              {km} km{tripType === "outstation" ? ` · ${t("Outstation")}` : ""}
             </Text>
           </View>
         )}
@@ -128,7 +129,7 @@ export default function Ride() {
 
       <BottomSheet style={{ maxHeight: "68%" }}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={[font.heading, { marginBottom: space.md }]}>{byHours ? "Book by hours" : "Choose a ride"}</Text>
+          <Text style={[font.heading, { marginBottom: space.md }]}>{byHours ? t("Book by hours") : t("Choose a ride")}</Text>
 
           {options.map((o) => {
             const active = o.key === selected;
@@ -145,10 +146,10 @@ export default function Ride() {
                   <Ionicons name={o.icon} size={30} color={colors.black} />
                 </View>
                 <View style={{ flex: 1 }}>
-                  <Text style={styles.optionTitle}>{o.title}</Text>
+                  <Text style={styles.optionTitle}>{t(o.title)}</Text>
                   <Text style={font.tiny} numberOfLines={1}>
                     {eta ? `${eta} · ` : ""}
-                    {o.hint}
+                    {t(o.hint)}
                   </Text>
                 </View>
                 {active && <Ionicons name="checkmark-circle" size={26} color={colors.black} />}
@@ -159,7 +160,7 @@ export default function Ride() {
           {needsHours(chosen) && (
             <View style={{ marginTop: space.sm }}>
               <Text style={[font.small, { marginBottom: space.sm }]}>
-                {byHours ? "How many hours? Go to as many places as you like." : "How long do you need the driver?"}
+                {byHours ? t("How many hours? Go to as many places as you like.") : t("How long do you need the driver?")}
               </Text>
               <Stepper value={hours} onChange={setHours} min={1} max={72} unit="hours" />
             </View>
@@ -168,7 +169,7 @@ export default function Ride() {
           {/* Payment */}
           <View style={styles.payRow}>
             <Ionicons name="call-outline" size={22} color={colors.green} />
-            <Text style={[font.small, { flex: 1 }]}>Agree the price with the driver on call. Pay by cash or UPI.</Text>
+            <Text style={[font.small, { flex: 1 }]}>{t("Agree the price with the driver on call. Pay by cash or UPI.")}</Text>
           </View>
 
           {/* Note */}
@@ -176,7 +177,7 @@ export default function Ride() {
             <TextInput
               value={note}
               onChangeText={setNote}
-              placeholder="Note for driver, e.g. 2 bags, wait near temple"
+              placeholder={t("Note for driver, e.g. 2 bags, wait near temple")}
               placeholderTextColor={colors.textFaint}
               style={styles.note}
               maxLength={300}
@@ -185,13 +186,13 @@ export default function Ride() {
           ) : (
             <Pressable onPress={() => setShowNote(true)} style={styles.noteRow} accessibilityRole="button">
               <Ionicons name="chatbubble-ellipses-outline" size={20} color={colors.textMuted} />
-              <Text style={font.small}>Add note for driver</Text>
+              <Text style={font.small}>{t("Add note for driver")}</Text>
             </Pressable>
           )}
         </ScrollView>
 
         <Button
-          title={`Send to all free ${chosen.service === "driver_only" ? "drivers" : chosen.title + "s"}`}
+          title={chosen.service === "driver_only" ? t("Send to all free drivers") : t("Send to all free {car}", { car: t(chosen.title) })}
           onPress={book}
           loading={booking}
           style={{ marginTop: space.md }}

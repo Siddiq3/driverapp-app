@@ -3,6 +3,7 @@ import { Redirect, Tabs } from "expo-router";
 import { homeRouteFor, useAuth } from "@/lib/auth";
 import type { UserRole } from "@/lib/types";
 import { colors } from "@/theme";
+import { t } from "@/i18n";
 
 /** Bottom tabs shared by the customer and driver sides: Home · Trips · Account. */
 export function TabsLayout({ mode }: { mode: UserRole }) {
@@ -29,21 +30,21 @@ export function TabsLayout({ mode }: { mode: UserRole }) {
       <Tabs.Screen
         name="home"
         options={{
-          title: "Home",
+          title: t("Home"),
           tabBarIcon: ({ color, size }) => <Ionicons name="home" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="trips"
         options={{
-          title: "Trips",
+          title: t("Trips"),
           tabBarIcon: ({ color, size }) => <Ionicons name="time" color={color} size={size} />,
         }}
       />
       <Tabs.Screen
         name="account"
         options={{
-          title: "Account",
+          title: t("Account"),
           tabBarIcon: ({ color, size }) => <Ionicons name="person-circle" color={color} size={size} />,
         }}
       />

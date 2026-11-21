@@ -17,6 +17,8 @@ Backend: [driverapp-backend](https://github.com/Siddiq3/driverapp-backend) (Supa
 | Driver accepts → call each other, agree price, **4-digit ride PIN** | Accept → call customer → enter PIN to start → complete |
 | Pay the driver directly (cash / UPI), rate the driver | Rate customer, go free again |
 
+**Languages:** English, Telugu (తెలుగు) and Hindi (हिन्दी). Chosen on the first screen, changeable in Account; notifications arrive in the same language.
+
 Ads: Google AdMob banners on customer screens only (test ads until your IDs are in `.env`).
 
 Design: clean black-and-white, large text and buttons, very few words per screen, so first-time smartphone users in small towns can follow it.
@@ -41,6 +43,7 @@ src/
   lib/push.ts           push notification setup
   components/           buttons, fields, map, cards
   screens/              screens shared by both modes
+  i18n/                 languages: te.ts (Telugu), hi.ts (Hindi). English text is the key
   theme.ts              colours, sizes
 ```
 
@@ -67,7 +70,17 @@ Moving to AWS later = change `src/lib/api.ts` and `src/lib/supabase.ts` only.
    ```
 7. **Release:** `npm run build:android` → upload the `.aab` to Google Play.
 
+## Languages
+
+Every screen text is written as `t("English text")`. `src/i18n/te.ts` and `hi.ts` map the English text to the translation; anything missing simply shows in English.
+
+- Add or fix a translation: edit the language file.
+- Add a language (e.g. Kannada): copy `te.ts` to `kn.ts`, translate, add it in `src/i18n/index.ts`, and add its push texts in the backend `supabase/functions/_shared/messages.ts`.
+- `npm run check:translations` lists any text that is not translated yet.
+
 ## Checks before launch
+
+- [ ] Ask a native Telugu and Hindi speaker to read through `te.ts` and `hi.ts`
 
 - [ ] Replace placeholder fares in the backend `fare_rates` table with real local rates
 - [ ] Test with 2 phones: one customer, one driver (approve the driver in Supabase first)

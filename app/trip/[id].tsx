@@ -19,6 +19,7 @@ import { useOnAppActive, useSecondsLeft } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { DriverPublic, Trip } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
+import { t } from "@/i18n";
 
 export default function CustomerTrip() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -29,9 +30,9 @@ export default function CustomerTrip() {
   const load = useCallback(async () => {
     if (!id) return;
     try {
-      const t = await api.getTrip(id);
-      if (!t) setNotFound(true);
-      setTrip(t);
+      const fresh = await api.getTrip(id);
+      if (!fresh) setNotFound(true);
+      setTrip(fresh);
     } catch {
       /* keep last known state */
     }
@@ -41,7 +42,7 @@ export default function CustomerTrip() {
   useEffect(() => {
     load();
     if (!id) return;
-    return api.watchTrip(id, (t) => setTrip((old) => ({ ...(old ?? t), ...t })));
+    return api.watchTrip(id, (fresh) => setTrip((old) => ({ ...(old ?? fresh), ...fresh })));
   }, [id, load]);
   useOnAppActive(load);
 
@@ -55,12 +56,12 @@ export default function CustomerTrip() {
   if (notFound) {
     return (
       <SafeAreaView style={styles.center}>
-        <Text style={font.heading}>Trip not found</Text>
-        <Button title="Go home" onPress={() => router.replace("/")} style={{ marginTop: space.xl, alignSelf: "stretch" }} />
+        <Text style={font.heading}>{t("Trip not found")}</Text>
+        <Button title={t("Go home")} onPress={() => router.replace("/")} style={{ marginTop: space.xl, alignSelf: "stretch" }} />
       </SafeAreaView>
     );
   }
-  if (!trip) return <Loading label="Loading your trip…" />;
+  if (!trip) return <Loading label={t("Loading your trip…")} />;
 
   const pickup = { lat: trip.pickup_lat, lng: trip.pickup_lng };
   const drop = trip.drop_lat != null && trip.drop_lng != null ? { lat: trip.drop_lat, lng: trip.drop_lng } : null;
@@ -69,7 +70,7 @@ export default function CustomerTrip() {
     <View style={{ flex: 1 }}>
       <Map pickup={pickup} drop={drop} bottomInset={360} />
       <SafeAreaView edges={["top"]} style={styles.topBar} pointerEvents="box-none">
-        <IconButton icon="close" label="Close" background={colors.white} onPress={() => router.replace("/customer/home")} />
+        <IconButton icon="close" label={t("Close")} background={colors.white} onPress={() => router.replace("/customer/home")} />
       </SafeAreaView>
 
       <BottomSheet>
@@ -89,7 +90,7 @@ export default function CustomerTrip() {
 function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void }) {
   const direct = !!trip.requested_driver_id;
   const picked = chosen.get();
-  const directName = picked && picked.id === trip.requested_driver_id ? firstName(picked.full_name) : "the driver";
+  const directName = picked && picked.id === trip.requested_driver_id ? firstName(picked.full_name) : t("the driver");
   const left = useSecondsLeft(trip.expires_at);
   const [cancelling, setCancelling] = useState(false);
   const widening = useRef(false);
@@ -101,7 +102,7 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
     api
       .widenSearch(trip.id)
       .then(() => api.getTrip(trip.id))
-      .then((t) => t && onChange(t))
+      .then((fresh) => fresh && onChange(fresh))
       .catch(() => undefined)
       .finally(() => {
         setTimeout(() => (widening.current = false), 3000);
@@ -109,7 +110,7 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
   }, [left, trip.id, onChange]);
 
   const cancel = async () => {
-    if (!(await confirm("Cancel this request?", "Drivers near you will stop seeing it.", "Cancel request", true))) return;
+    if (!(await confirm(t("Cancel this request?"), t("Drivers near you will stop seeing it."), t("Cancel request"), true))) return;
     setCancelling(true);
     try {
       await api.cancelTrip(trip.id, "Customer cancelled while searching");
@@ -125,18 +126,18 @@ function Searching({ trip, onChange }: { trip: Trip; onChange: (t: Trip) => void
     <View>
       <Pulse icon={trip.service_type === "driver_only" ? "person" : "car"} />
       <Text style={[font.heading, styles.centerText]}>
-        {direct ? `Waiting for ${directName} to accept` : "Finding a driver near you"}
+        {direct ? t("Waiting for {name} to accept", { name: directName }) : t("Finding a driver near you")}
       </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>
-        {direct ? mmss(left) : `Looking within ${trip.search_radius_km} km · ${mmss(left)}`}
+        {direct ? mmss(left) : t("Looking within {km} km · {time}", { km: trip.search_radius_km, time: mmss(left) })}
       </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>
-        You can close the app. We will notify you.
+        {t("You can close the app. We will notify you.")}
       </Text>
       <View style={{ height: space.xl }} />
       <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? `${trip.hours} hours` : undefined} />
       <View style={{ height: space.xl }} />
-      <Button title="Cancel request" variant="secondary" onPress={cancel} loading={cancelling} />
+      <Button title={t("Cancel request")} variant="secondary" onPress={cancel} loading={cancelling} />
       <AdBanner />
     </View>
   );
@@ -156,15 +157,15 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
   }, [trip.id, trip.status]);
 
   const headline =
-    trip.status === "accepted" ? "Driver is on the way" : trip.status === "arrived" ? "Driver has arrived" : "Enjoy your trip";
+    trip.status === "accepted" ? t("Driver is on the way") : trip.status === "arrived" ? t("Driver has arrived") : t("Enjoy your trip");
 
   const share = async () => {
     const lines = [
-      `I'm on a trip booked with DriverApp.`,
-      driver ? `Driver: ${driver.full_name ?? ""} (${driver.phone ?? ""})` : "",
-      driver?.vehicle_number ? `Car: ${driver.vehicle_model ?? ""} ${driver.vehicle_number}` : "",
-      `From: ${trip.pickup_address}`,
-      trip.drop_address ? `To: ${trip.drop_address}` : "",
+      t("I'm on a trip booked with DriverApp."),
+      driver ? `${t("Driver")}: ${driver.full_name ?? ""} (${driver.phone ?? ""})` : "",
+      driver?.vehicle_number ? `${t("Car")}: ${driver.vehicle_model ?? ""} ${driver.vehicle_number}` : "",
+      `${t("From")}: ${trip.pickup_address}`,
+      trip.drop_address ? `${t("To")}: ${trip.drop_address}` : "",
     ].filter(Boolean);
     try {
       await Share.share({ message: lines.join("\n") });
@@ -174,26 +175,26 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
   };
 
   const sos = async () => {
-    Alert.alert("Emergency?", "We will alert our team. You can also call 112 (police / ambulance).", [
-      { text: "Close", style: "cancel" },
+    Alert.alert(t("Emergency?"), t("We will alert our team. You can also call 112 (police / ambulance)."), [
+      { text: t("Close"), style: "cancel" },
       {
-        text: "Alert team",
+        text: t("Alert team"),
         onPress: async () => {
           try {
             const pos = await getCurrentPosition().catch(() => undefined);
             await api.triggerSos(trip.id, pos);
-            Alert.alert("Team alerted", "We will call you right away.");
+            Alert.alert("Team alerted", t("We will call you right away."));
           } catch (err) {
             showError(err);
           }
         },
       },
-      { text: "Call 112", style: "destructive", onPress: () => Linking.openURL("tel:112") },
+      { text: t("Call 112"), style: "destructive", onPress: () => Linking.openURL("tel:112") },
     ]);
   };
 
   const cancel = async () => {
-    if (!(await confirm("Cancel this trip?", "The driver is already coming for you.", "Cancel trip", true))) return;
+    if (!(await confirm(t("Cancel this trip?"), t("The driver is already coming for you."), t("Cancel trip"), true))) return;
     setCancelling(true);
     try {
       await api.cancelTrip(trip.id, "Customer cancelled after driver accepted");
@@ -213,19 +214,19 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
       {trip.status === "accepted" && (
         <Text style={[font.small, { marginBottom: space.sm }]}>
           {trip.customer_offer
-            ? `Your offer: ${rupees(trip.customer_offer)}. Call your driver to confirm.`
-            : "Call your driver to confirm the price and time."}
+            ? t("Your offer: {price}. Call your driver to confirm.", { price: rupees(trip.customer_offer) })
+            : t("Call your driver to confirm the price and time.")}
         </Text>
       )}
       {trip.status === "arrived" && (
-        <Text style={[font.small, { marginBottom: space.md }]}>Please meet your driver at the pickup point.</Text>
+        <Text style={[font.small, { marginBottom: space.md }]}>{t("Please meet your driver at the pickup point.")}</Text>
       )}
 
       {pin && (
-        <View style={styles.pinBox} accessibilityLabel={`Your ride PIN is ${pin.split("").join(" ")}`}>
+        <View style={styles.pinBox} accessibilityLabel={t("Your ride PIN is {pin}", { pin: pin.split("").join(" ") })}>
           <View style={{ flex: 1 }}>
-            <Text style={font.bodyStrong}>Your ride PIN</Text>
-            <Text style={font.tiny}>Tell this to the driver to start the trip</Text>
+            <Text style={font.bodyStrong}>{t("Your ride PIN")}</Text>
+            <Text style={font.tiny}>{t("Tell this to the driver to start the trip")}</Text>
           </View>
           <View style={styles.pinDigits}>
             {pin.split("").map((d, i) => (
@@ -240,7 +241,7 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
       <View style={styles.driverCard}>
         <Avatar name={driver?.full_name} url={driver?.avatar_url} size={60} />
         <View style={{ flex: 1 }}>
-          <Text style={font.subheading}>{driver?.full_name ?? "Your driver"}</Text>
+          <Text style={font.subheading}>{driver?.full_name ?? t("Your driver")}</Text>
           {driver && <RatingText avg={driver.rating_avg} count={driver.rating_count} />}
           {trip.service_type === "car_with_driver" && driver?.vehicle_number && (
             <View style={styles.plateRow}>
@@ -251,18 +252,18 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
             </View>
           )}
         </View>
-        <IconButton icon="call" label="Call driver" background={colors.black} color={colors.white} size={54} onPress={() => callNumber(driver?.phone)} />
+        <IconButton icon="call" label={t("Call driver")} background={colors.black} color={colors.white} size={54} onPress={() => callNumber(driver?.phone)} />
       </View>
 
       <View style={styles.actions}>
-        <Button title="Share trip" icon="share-social-outline" variant="secondary" size="md" onPress={share} style={{ flex: 1 }} />
-        <Button title="SOS" icon="alert-circle" variant="danger" size="md" onPress={sos} style={{ flex: 1 }} />
+        <Button title={t("Share trip")} icon="share-social-outline" variant="secondary" size="md" onPress={share} style={{ flex: 1 }} />
+        <Button title={t("SOS")} icon="alert-circle" variant="danger" size="md" onPress={sos} style={{ flex: 1 }} />
       </View>
 
       <Route pickup={trip.pickup_address} drop={trip.drop_address} dropFallback={trip.hours ? `${trip.hours} hours` : undefined} />
 
       {trip.status !== "started" && (
-        <Button title="Cancel trip" variant="ghost" size="md" onPress={cancel} loading={cancelling} style={{ marginTop: space.md }} />
+        <Button title={t("Cancel trip")} variant="ghost" size="md" onPress={cancel} loading={cancelling} style={{ marginTop: space.md }} />
       )}
     </View>
   );
@@ -295,27 +296,27 @@ function Completed({ trip, driver }: { trip: Trip; driver: DriverPublic | null }
       <View style={styles.doneIcon}>
         <Ionicons name="checkmark" size={36} color={colors.white} />
       </View>
-      <Text style={[font.heading, styles.centerText]}>Trip completed</Text>
-      <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>Pay your driver the agreed price by cash or UPI.</Text>
+      <Text style={[font.heading, styles.centerText]}>{t("Trip completed")}</Text>
+      <Text style={[font.small, styles.centerText, { marginTop: space.xs }]}>{t("Pay your driver the agreed price by cash or UPI.")}</Text>
 
-      <InfoRow icon="car-outline" label="Trip" value={`${SERVICE_LABEL[trip.service_type]} · ${TRIP_LABEL[trip.trip_type]}`} />
+      <InfoRow icon="car-outline" label={t("Trip")} value={`${SERVICE_LABEL[trip.service_type]} · ${TRIP_LABEL[trip.trip_type]}`} />
 
       {done === false ? (
         <>
           <Text style={[font.subheading, styles.centerText, { marginTop: space.lg, marginBottom: space.md }]}>
-            How was {driver?.full_name?.split(" ")[0] ?? "your driver"}?
+            {t("How was {name}?", { name: driver?.full_name?.split(" ")[0] ?? t("your driver") })}
           </Text>
           <Stars value={stars} onChange={setStars} />
           {stars > 0 && (
             <View style={{ marginTop: space.lg }}>
-              <Field value={comment} onChangeText={setComment} placeholder="Anything to tell us? (optional)" maxLength={500} />
+              <Field value={comment} onChangeText={setComment} placeholder={t("Anything to tell us? (optional)")} maxLength={500} />
             </View>
           )}
-          <Button title="Submit" onPress={submit} loading={saving} disabled={stars === 0} style={{ marginTop: space.md }} />
-          <Button title="Skip" variant="ghost" size="md" onPress={() => router.replace("/customer/home")} />
+          <Button title={t("Submit")} onPress={submit} loading={saving} disabled={stars === 0} style={{ marginTop: space.md }} />
+          <Button title={t("Skip")} variant="ghost" size="md" onPress={() => router.replace("/customer/home")} />
         </>
       ) : (
-        <Button title="Done" onPress={() => router.replace("/customer/home")} style={{ marginTop: space.lg }} />
+        <Button title={t("Done")} onPress={() => router.replace("/customer/home")} style={{ marginTop: space.lg }} />
       )}
     </View>
   );
@@ -331,18 +332,18 @@ function Ended({ trip }: { trip: Trip }) {
         <Ionicons name={expired ? "time-outline" : "close"} size={36} color={colors.black} />
       </View>
       <Text style={[font.heading, styles.centerText]}>
-        {expired ? (direct ? "The driver didn't answer" : "No driver free right now") : byDriver ? "Driver cancelled" : "Trip cancelled"}
+        {expired ? (direct ? t("The driver didn't answer") : t("No driver free right now")) : byDriver ? t("Driver cancelled") : t("Trip cancelled")}
       </Text>
       <Text style={[font.small, styles.centerText, { marginTop: space.sm }]}>
         {expired
           ? direct
-            ? "They may be driving. Please choose another free driver."
-            : "All drivers near you are busy. Please try again in a few minutes."
+            ? t("They may be driving. Please choose another free driver.")
+            : t("All drivers near you are busy. Please try again in a few minutes.")
           : byDriver
-            ? "Sorry about that. Please choose another driver."
-            : "This trip was cancelled."}
+            ? t("Sorry about that. Please choose another driver.")
+            : t("This trip was cancelled.")}
       </Text>
-      <Button title="Choose another driver" onPress={() => router.replace("/customer/home")} style={{ marginTop: space.xl }} />
+      <Button title={t("Choose another driver")} onPress={() => router.replace("/customer/home")} style={{ marginTop: space.xl }} />
       <AdBanner />
     </View>
   );

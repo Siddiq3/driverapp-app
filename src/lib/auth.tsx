@@ -9,7 +9,9 @@ import { createContext, useCallback, useContext, useEffect, useMemo, useState, t
 import * as api from "./api";
 import { registerForPush } from "./push";
 import { supabase } from "./supabase";
+import { getLanguage } from "@/i18n";
 import type { Driver, Profile } from "./types";
+import { t } from "@/i18n";
 
 GoogleSignin.configure({
   webClientId: process.env.EXPO_PUBLIC_GOOGLE_WEB_CLIENT_ID,
@@ -44,6 +46,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     const [p, d] = await Promise.all([api.getMyProfile(), api.getMyDriver()]);
     setProfile(p);
     setDriver(d);
+    // Notifications are sent in the app's language
+    if (p && p.language !== getLanguage()) api.updateMyProfile({ language: getLanguage() }).catch(() => undefined);
   }, []);
 
   useEffect(() => {
@@ -87,7 +91,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const res = await GoogleSignin.signIn();
       if (!isSuccessResponse(res)) return; // user closed the dialog
       const idToken = res.data.idToken;
-      if (!idToken) throw new api.ApiError("Google sign-in failed. Please try again.");
+      if (!idToken) throw new api.ApiError(t("Google sign-in failed. Please try again."));
       await api.signInWithGoogleIdToken(idToken);
       const { data } = await supabase.auth.getSession();
       await load(data.session);
@@ -95,7 +99,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       if (isErrorWithCode(err)) {
         if (err.code === statusCodes.IN_PROGRESS) return;
         if (err.code === statusCodes.PLAY_SERVICES_NOT_AVAILABLE) {
-          throw new api.ApiError("Please update Google Play services and try again.");
+          throw new api.ApiError(t("Please update Google Play services and try again."));
         }
       }
       throw err;

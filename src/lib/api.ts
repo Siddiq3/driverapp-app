@@ -21,18 +21,19 @@ import type {
   VehicleType,
 } from "./types";
 import { ACTIVE_STATUSES } from "./types";
+import { t } from "@/i18n";
 
 export class ApiError extends Error {}
 
-function fail(error: { message?: string } | null | undefined, fallback = "Something went wrong. Please try again."): never {
-  throw new ApiError(friendlyMessage(error?.message) ?? fallback);
+function fail(error: { message?: string } | null | undefined, fallback?: string): never {
+  throw new ApiError(friendlyMessage(error?.message) ?? fallback ?? t("Something went wrong. Please try again."));
 }
 
 /** Turn technical errors into short, plain messages. */
 function friendlyMessage(message?: string): string | undefined {
   if (!message) return undefined;
-  if (/network|fetch|timed? ?out/i.test(message)) return "No internet connection. Please check and try again.";
-  if (/JWT|session|not signed in/i.test(message)) return "Please sign in again.";
+  if (/network|fetch|timed? ?out/i.test(message)) return t("No internet connection. Please check and try again.");
+  if (/JWT|session|not signed in/i.test(message)) return t("Please sign in again.");
   return message;
 }
 
@@ -56,7 +57,7 @@ async function tripAction<T>(action: string, params: Record<string, unknown>): P
 async function myId(): Promise<string> {
   const { data } = await supabase.auth.getSession();
   const id = data.session?.user.id;
-  if (!id) throw new ApiError("Please sign in again.");
+  if (!id) throw new ApiError(t("Please sign in again."));
   return id;
 }
 
@@ -71,11 +72,13 @@ export async function getMyProfile(): Promise<Profile | null> {
   return data as Profile | null;
 }
 
-export async function updateMyProfile(fields: Partial<Pick<Profile, "full_name" | "phone" | "role" | "push_token">>) {
+export async function updateMyProfile(
+  fields: Partial<Pick<Profile, "full_name" | "phone" | "role" | "push_token" | "language">>,
+) {
   const id = await myId();
   const { error } = await supabase.from("profiles").update(fields).eq("id", id);
   if (error) {
-    if (/phone/i.test(error.message)) throw new ApiError("Please enter a valid 10-digit phone number.");
+    if (/phone/i.test(error.message)) throw new ApiError(t("Please enter a valid 10-digit phone number."));
     fail(error);
   }
 }
@@ -403,7 +406,7 @@ export function watchMyOffers(driverId: string, onChange: () => void): () => voi
 
 export async function signInWithGoogleIdToken(idToken: string) {
   const { error } = await supabase.auth.signInWithIdToken({ provider: "google", token: idToken });
-  if (error) fail(error, "Google sign-in failed. Please try again.");
+  if (error) fail(error, t("Google sign-in failed. Please try again."));
 }
 
 export async function signOut() {
