@@ -1,13 +1,15 @@
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useState } from "react";
-import { StyleSheet, Text, View } from "react-native";
+import { Linking, StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
 import { useAuth } from "@/lib/auth";
 import { showError } from "@/lib/alert";
 import { colors, space } from "@/theme";
 import { t } from "@/i18n";
+
+const WEBSITE = process.env.EXPO_PUBLIC_WEBSITE_URL ?? "https://driverapp.vercel.app";
 
 export default function Welcome() {
   const { signInWithGoogle } = useAuth();
@@ -49,7 +51,16 @@ export default function Welcome() {
           onPress={onGoogle}
           loading={busy}
         />
-        <Text style={styles.legal}>{t("By continuing you agree to our Terms and Privacy Policy.")}</Text>
+        <Text style={styles.legal}>
+          {t("By continuing you agree to our Terms and Privacy Policy.")}{" "}
+          <Text style={styles.link} onPress={() => Linking.openURL(`${WEBSITE}/terms`)}>
+            {t("Terms")}
+          </Text>
+          {" · "}
+          <Text style={styles.link} onPress={() => Linking.openURL(`${WEBSITE}/privacy`)}>
+            {t("Privacy")}
+          </Text>
+        </Text>
       </View>
     </SafeAreaView>
   );
@@ -82,5 +93,6 @@ const styles = StyleSheet.create({
   point: { flexDirection: "row", alignItems: "center", gap: space.md },
   pointText: { fontSize: 17, color: colors.white, flex: 1 },
   bottom: { padding: space.xl, gap: space.md },
+  link: { color: colors.white, textDecorationLine: "underline" },
   legal: { fontSize: 13, color: "#A6A6A6", textAlign: "center" },
 });

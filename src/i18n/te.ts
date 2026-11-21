@@ -351,6 +351,17 @@ export const te: Record<string, string> = {
   "Our team may call you to see your licence, RC and insurance before approving.": "ఆమోదించే ముందు మీ లైసెన్స్, RC మరియు ఇన్సూరెన్స్ చూడటానికి మా టీమ్ కాల్ చేయవచ్చు.",
   "Our team may call you to see your licence before approving.": "ఆమోదించే ముందు మీ లైసెన్స్ చూడటానికి మా టీమ్ కాల్ చేయవచ్చు.",
 
+  "Delete your account?": "మీ ఖాతాను తొలగించాలా?",
+  "Your profile, driver details, trips and ratings will be deleted. This cannot be undone.": "మీ ప్రొఫైల్, డ్రైవర్ వివరాలు, ట్రిప్‌లు మరియు రేటింగ్‌లు తొలగించబడతాయి. దీన్ని తిరిగి పొందలేరు.",
+  "Delete": "తొలగించు",
+  "Are you sure?": "ఖచ్చితంగానా?",
+  "Your account will be deleted now.": "మీ ఖాతా ఇప్పుడే తొలగించబడుతుంది.",
+  "Delete my account": "నా ఖాతా తొలగించు",
+  "Privacy policy": "గోప్యతా విధానం",
+  "Terms and conditions": "నిబంధనలు మరియు షరతులు",
+  "Terms": "నిబంధనలు",
+  "Privacy": "గోప్యత",
+
   // ---- Messages from the server ----
   "Add your phone number before booking": "బుక్ చేసే ముందు మీ ఫోన్ నంబర్ చేర్చండి",
   "Finish your current trip first": "ముందుగా ప్రస్తుత ట్రిప్ పూర్తి చేయండి",

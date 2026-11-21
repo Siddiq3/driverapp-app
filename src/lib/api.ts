@@ -409,6 +409,13 @@ export async function signInWithGoogleIdToken(idToken: string) {
   if (error) fail(error, t("Google sign-in failed. Please try again."));
 }
 
+/** Permanently deletes the account and its data (Google Play requirement). */
+export async function deleteMyAccount() {
+  const { error } = await supabase.rpc("delete_my_account");
+  if (error) fail(error);
+  await supabase.auth.signOut({ scope: "local" });
+}
+
 export async function signOut() {
   try {
     await updateMyProfile({ push_token: null });

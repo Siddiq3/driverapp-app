@@ -2,7 +2,7 @@ import { Ionicons } from "@expo/vector-icons";
 import Constants from "expo-constants";
 import { router } from "expo-router";
 import { useState } from "react";
-import { Pressable, StyleSheet, Text, View } from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { Screen, SectionLabel } from "@/components/Screen";
 import { Avatar, RatingText } from "@/components/TripBits";
 import { confirm, openWhatsApp, showError } from "@/lib/alert";
@@ -14,6 +14,7 @@ import { colors, font, radius, space } from "@/theme";
 import { getLanguage, LANGUAGES, t } from "@/i18n";
 
 const SUPPORT = process.env.EXPO_PUBLIC_SUPPORT_PHONE ?? "";
+const WEBSITE = process.env.EXPO_PUBLIC_WEBSITE_URL ?? "https://driverapp.vercel.app";
 
 export function Account({ mode }: { mode: UserRole }) {
   const { profile, driver, refresh, signOut } = useAuth();
@@ -43,6 +44,24 @@ export function Account({ mode }: { mode: UserRole }) {
     }
     await signOut();
     router.replace("/welcome");
+  };
+
+  const deleteAccount = async () => {
+    const sure = await confirm(
+      t("Delete your account?"),
+      t("Your profile, driver details, trips and ratings will be deleted. This cannot be undone."),
+      t("Delete"),
+      true,
+    );
+    if (!sure) return;
+    const reallySure = await confirm(t("Are you sure?"), t("Your account will be deleted now."), t("Delete my account"), true);
+    if (!reallySure) return;
+    try {
+      await api.deleteMyAccount();
+      router.replace("/welcome");
+    } catch (err) {
+      showError(err);
+    }
   };
 
   return (
@@ -96,6 +115,9 @@ export function Account({ mode }: { mode: UserRole }) {
         />
       ) : null}
       <Row icon="log-out-outline" label={t("Sign out")} onPress={logout} danger />
+      <Row icon="trash-outline" label={t("Delete my account")} onPress={deleteAccount} danger />
+      <Row icon="document-text-outline" label={t("Privacy policy")} onPress={() => Linking.openURL(`${WEBSITE}/privacy`)} />
+      <Row icon="reader-outline" label={t("Terms and conditions")} onPress={() => Linking.openURL(`${WEBSITE}/terms`)} />
 
       <Text style={styles.version}>{t("Version {v}", { v: Constants.expoConfig?.version ?? "1.0.0" })}</Text>
     </Screen>

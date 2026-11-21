@@ -350,6 +350,17 @@ export const hi: Record<string, string> = {
   "Our team may call you to see your licence, RC and insurance before approving.": "मंज़ूरी से पहले आपका लाइसेंस, RC और बीमा देखने के लिए हमारी टीम फ़ोन कर सकती है।",
   "Our team may call you to see your licence before approving.": "मंज़ूरी से पहले आपका लाइसेंस देखने के लिए हमारी टीम फ़ोन कर सकती है।",
 
+  "Delete your account?": "अपना खाता हटाएँ?",
+  "Your profile, driver details, trips and ratings will be deleted. This cannot be undone.": "आपकी प्रोफ़ाइल, ड्राइवर जानकारी, ट्रिप और रेटिंग हटा दी जाएँगी। इसे वापस नहीं लाया जा सकता।",
+  "Delete": "हटाएँ",
+  "Are you sure?": "क्या आप पक्का हैं?",
+  "Your account will be deleted now.": "आपका खाता अभी हटा दिया जाएगा।",
+  "Delete my account": "मेरा खाता हटाएँ",
+  "Privacy policy": "प्राइवेसी पॉलिसी",
+  "Terms and conditions": "नियम और शर्तें",
+  "Terms": "नियम",
+  "Privacy": "प्राइवेसी",
+
   // ---- Messages from the server ----
   "Add your phone number before booking": "बुक करने से पहले अपना फ़ोन नंबर जोड़ें",
   "Finish your current trip first": "पहले मौजूदा ट्रिप पूरी करें",
