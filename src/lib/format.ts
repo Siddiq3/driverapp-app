@@ -36,6 +36,27 @@ export const STATUS_LABEL: Record<TripStatus, string> = {
   expired: "No driver found",
 };
 
+/** "₹12/km · ₹200/hr · ₹1,500/day" from a driver's prices. */
+export function ratesText(d: {
+  rate_per_km?: number | null;
+  rate_per_hour?: number | null;
+  rate_per_day?: number | null;
+}): string {
+  return [
+    d.rate_per_km ? `${rupees(d.rate_per_km)}/km` : null,
+    d.rate_per_hour ? `${rupees(d.rate_per_hour)}/hr` : null,
+    d.rate_per_day ? `${rupees(d.rate_per_day)}/day` : null,
+  ]
+    .filter(Boolean)
+    .join(" · ");
+}
+
+/** Whole rupees from what someone typed, or null. */
+export function parseRupees(text: string): number | null {
+  const n = parseInt(text.replace(/[^0-9]/g, ""), 10);
+  return Number.isFinite(n) && n > 0 ? n : null;
+}
+
 export function dateTime(iso: string): string {
   const d = new Date(iso);
   return d.toLocaleString("en-IN", {

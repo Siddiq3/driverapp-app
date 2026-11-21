@@ -4,7 +4,7 @@ import { Modal, StyleSheet, Text, View } from "react-native";
 import * as Haptics from "expo-haptics";
 import { Button } from "@/components/Button";
 import { Route } from "@/components/TripBits";
-import { mmss, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { mmss, rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useSecondsLeft } from "@/lib/hooks";
 import type { Trip } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
@@ -57,7 +57,14 @@ export function OfferCard({
 
           <Text style={styles.price}>{details.slice(0, 2).join(" · ")}</Text>
           {details.length > 2 && <Text style={font.small}>{details.slice(2).join(" · ")}</Text>}
-          <Text style={[font.small, { marginTop: 4 }]}>Price: agree with the customer on call</Text>
+          {trip.customer_offer ? (
+            <View style={styles.offer}>
+              <Text style={styles.offerLabel}>Customer offers</Text>
+              <Text style={styles.offerValue}>{rupees(trip.customer_offer)}</Text>
+            </View>
+          ) : (
+            <Text style={[font.small, { marginTop: 4 }]}>Customer will go with your prices. Confirm on call.</Text>
+          )}
 
           <View style={styles.away}>
             <Ionicons name="navigate" size={20} color={colors.black} />
@@ -105,6 +112,17 @@ const styles = StyleSheet.create({
   },
   timerText: { color: colors.white, fontWeight: "700", fontSize: 15 },
   price: { fontSize: 28, fontWeight: "800", color: colors.text },
+  offer: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: colors.greenSoft,
+    borderRadius: radius.sm,
+    padding: space.md,
+    marginTop: space.md,
+  },
+  offerLabel: { fontSize: 16, fontWeight: "600", color: colors.green },
+  offerValue: { fontSize: 26, fontWeight: "800", color: colors.green },
   away: {
     flexDirection: "row",
     alignItems: "center",

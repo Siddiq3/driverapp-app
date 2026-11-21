@@ -8,7 +8,7 @@ import { Screen, SectionLabel } from "@/components/Screen";
 import { showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { VEHICLE_HINT, VEHICLE_LABEL } from "@/lib/format";
+import { parseRupees, VEHICLE_HINT, VEHICLE_LABEL } from "@/lib/format";
 import type { VehicleType } from "@/lib/types";
 import { font, space } from "@/theme";
 
@@ -20,7 +20,10 @@ export default function DriverRegister() {
   const [model, setModel] = useState(driver?.vehicle_model ?? "");
   const [number, setNumber] = useState(driver?.vehicle_number ?? "");
   const [licence, setLicence] = useState(driver?.licence_number ?? "");
-  const [rate, setRate] = useState(driver?.rate_note ?? "");
+  const [perKm, setPerKm] = useState(driver?.rate_per_km ? String(driver.rate_per_km) : "");
+  const [perHour, setPerHour] = useState(driver?.rate_per_hour ? String(driver.rate_per_hour) : "");
+  const [perDay, setPerDay] = useState(driver?.rate_per_day ? String(driver.rate_per_day) : "");
+  const [rateNote, setRateNote] = useState(driver?.rate_note ?? "");
   const [errors, setErrors] = useState<Record<string, string | undefined>>({});
   const [busy, setBusy] = useState(false);
 
@@ -29,9 +32,13 @@ export default function DriverRegister() {
     const next = {
       licence: licence.trim().length < 6 ? "Enter your driving licence number" : undefined,
       number: car && number.trim().length < 6 ? "Enter your car number, e.g. AP39AB1234" : undefined,
+      price:
+        (car && parseRupees(perKm)) || parseRupees(perHour) || parseRupees(perDay)
+          ? undefined
+          : "Enter at least one price so customers know your rate",
     };
     setErrors(next);
-    if (next.licence || next.number) return;
+    if (next.licence || next.number || next.price) return;
 
     setBusy(true);
     try {
@@ -42,7 +49,12 @@ export default function DriverRegister() {
         vehicleNumber: number,
         licenceNumber: licence,
       });
-      await api.setRateNote(rate);
+      await api.setRates({
+        perKm: car ? parseRupees(perKm) : null,
+        perHour: parseRupees(perHour),
+        perDay: parseRupees(perDay),
+        note: rateNote,
+      });
       await refresh();
       router.replace("/driver-pending");
     } catch (err) {
@@ -110,14 +122,47 @@ export default function DriverRegister() {
         </View>
       )}
 
+      <SectionLabel>Your prices</SectionLabel>
+      <Text style={[font.small, { marginBottom: space.md }]}>
+        Customers see these on your card. They can also offer their own price — you decide.
+      </Text>
+      {hasCar === "yes" && (
+        <Field
+          label="Price per km, with your car (₹)"
+          icon="speedometer-outline"
+          value={perKm}
+          onChangeText={setPerKm}
+          placeholder="e.g. 12"
+          keyboardType="number-pad"
+          maxLength={4}
+        />
+      )}
       <Field
-        label="Your rate (optional)"
-        icon="pricetag-outline"
-        value={rate}
-        onChangeText={setRate}
-        placeholder={hasCar === "yes" ? "e.g. ₹12/km · ₹2000/day" : "e.g. ₹150/hour · ₹800/day"}
+        label={hasCar === "yes" ? "Price per hour (₹)" : "Price per hour, driving customer's car (₹)"}
+        icon="time-outline"
+        value={perHour}
+        onChangeText={setPerHour}
+        placeholder={hasCar === "yes" ? "e.g. 250" : "e.g. 150"}
+        keyboardType="number-pad"
+        maxLength={5}
+      />
+      <Field
+        label="Price per day (₹)"
+        icon="sunny-outline"
+        value={perDay}
+        onChangeText={setPerDay}
+        placeholder={hasCar === "yes" ? "e.g. 2000" : "e.g. 800"}
+        keyboardType="number-pad"
+        maxLength={6}
+        error={errors.price}
+      />
+      <Field
+        label="Anything else? (optional)"
+        icon="information-circle-outline"
+        value={rateNote}
+        onChangeText={setRateNote}
+        placeholder="e.g. Night charges extra, toll extra"
         maxLength={80}
-        hint="Customers see this on your card. You still agree the final price on call."
       />
 
       <Text style={[font.small, { marginTop: space.md }]}>

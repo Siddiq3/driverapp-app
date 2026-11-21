@@ -14,7 +14,7 @@ import { Avatar, InfoRow, RatingText, Route, Stars } from "@/components/TripBits
 import { chosen } from "@/lib/draft";
 import { callNumber, confirm, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
-import { firstName, mmss, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { firstName, mmss, rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useOnAppActive, useSecondsLeft } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { DriverPublic, Trip } from "@/lib/types";
@@ -211,7 +211,11 @@ function OnTrip({ trip, driver }: { trip: Trip; driver: DriverPublic | null }) {
         <Text style={font.heading}>{headline}</Text>
       </View>
       {trip.status === "accepted" && (
-        <Text style={[font.small, { marginBottom: space.sm }]}>Call your driver to agree on the price and time.</Text>
+        <Text style={[font.small, { marginBottom: space.sm }]}>
+          {trip.customer_offer
+            ? `Your offer: ${rupees(trip.customer_offer)}. Call your driver to confirm.`
+            : "Call your driver to confirm the price and time."}
+        </Text>
       )}
       {trip.status === "arrived" && (
         <Text style={[font.small, { marginBottom: space.md }]}>Please meet your driver at the pickup point.</Text>

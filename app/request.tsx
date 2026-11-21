@@ -9,7 +9,7 @@ import { Avatar, RatingText } from "@/components/TripBits";
 import { showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { chosen, useBookingDraft } from "@/lib/draft";
-import { firstName, VEHICLE_LABEL } from "@/lib/format";
+import { firstName, parseRupees, ratesText, VEHICLE_LABEL } from "@/lib/format";
 import { colors, font, radius, space } from "@/theme";
 
 /** Send a request to the one driver the customer picked from the "free near you" list. */
@@ -21,14 +21,22 @@ export default function RequestDriver() {
 
   const [where, setWhere] = useState("");
   const [note, setNote] = useState("");
+  const [offer, setOffer] = useState("");
   const [sending, setSending] = useState(false);
 
   if (!driver) return <Redirect href="/customer/home" />;
 
   const name = firstName(driver.full_name);
+  const prices = ratesText({
+    rate_per_km: wantsCar ? driver.rate_per_km : null,
+    rate_per_hour: driver.rate_per_hour,
+    rate_per_day: driver.rate_per_day,
+  });
+  const offerValue = parseRupees(offer);
+  const offerError = offer.trim() && (offerValue == null || offerValue < 50) ? "Enter at least ₹50" : null;
 
   const send = async () => {
-    if (!pickup) return;
+    if (!pickup || offerError) return;
     setSending(true);
     try {
       const details = [where.trim() ? `Going to: ${where.trim()}` : null, note.trim() || null].filter(Boolean).join(" · ");
@@ -41,6 +49,7 @@ export default function RequestDriver() {
         hours: null,
         note: details,
         driverId: driver.id,
+        offer: offerValue,
       });
       try {
         router.dismissAll();
@@ -77,12 +86,16 @@ export default function RequestDriver() {
         </View>
       </View>
 
-      {driver.rate_note ? (
+      {(prices || driver.rate_note) && (
         <View style={styles.rate}>
-          <Ionicons name="pricetag-outline" size={20} color={colors.black} />
-          <Text style={font.bodyStrong}>{driver.rate_note}</Text>
+          <Ionicons name="pricetag-outline" size={20} color={colors.green} />
+          <View style={{ flex: 1 }}>
+            <Text style={font.tiny}>{name}'s prices</Text>
+            {prices ? <Text style={styles.prices}>{prices}</Text> : null}
+            {driver.rate_note ? <Text style={font.small}>{driver.rate_note}</Text> : null}
+          </View>
         </View>
-      ) : null}
+      )}
 
       <SectionLabel>Pickup</SectionLabel>
       <Pressable
@@ -114,10 +127,22 @@ export default function RequestDriver() {
         maxLength={150}
       />
 
+      <SectionLabel>Your price offer (optional)</SectionLabel>
+      <Field
+        icon="cash-outline"
+        value={offer}
+        onChangeText={setOffer}
+        placeholder="e.g. 500"
+        keyboardType="number-pad"
+        maxLength={6}
+        error={offerError}
+        hint={`Leave empty to go with ${name}'s prices. ${name} can accept your offer or call you to discuss.`}
+      />
+
       <View style={styles.info}>
         <Ionicons name="call-outline" size={20} color={colors.textMuted} />
         <Text style={[font.small, { flex: 1 }]}>
-          When {name} accepts, you can call each other and agree on the price. Pay the driver directly.
+          After {name} accepts, call each other to confirm. Pay the driver directly by cash or UPI.
         </Text>
       </View>
     </Screen>
@@ -135,6 +160,7 @@ const styles = StyleSheet.create({
     padding: space.md,
     marginTop: space.lg,
   },
+  prices: { fontSize: 18, fontWeight: "800", color: colors.green },
   pickup: {
     flexDirection: "row",
     alignItems: "center",

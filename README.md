@@ -6,13 +6,13 @@ Backend: [driverapp-backend](https://github.com/Siddiq3/driverapp-backend) (Supa
 
 ## What's inside
 
-**v1 idea:** in small towns people call driver after driver to find one who is free. Here they **see who is free near them** and send a request. Price is agreed on the phone. **Free for everyone; v1 earns from ads.**
+**v1 idea:** in small towns people call driver after driver to find one who is free. Here they **see who is free near them** and send a request. Drivers set their own prices; customers can offer their own price; both confirm on the call. **Free for everyone; v1 earns from ads.**
 
 | Customer | Driver |
 | --- | --- |
-| Google login → allow location → name + phone | Register licence (+ car details) and an optional rate, e.g. "₹12/km" |
-| Home: map + list of **free cars / free drivers near me** (name, rating, car, km, rate) | Wait for approval (checked by admin) |
-| Tap one → **Send request** (pickup, where to, when — all optional) | Big **Go free / Go busy** switch |
+| Google login → allow location → name + phone | Register licence (+ car details) and **their prices**: ₹/km (car), ₹/hour, ₹/day |
+| Home: map + list of **free cars / free drivers near me** (name, rating, car, km, prices) | Wait for approval (checked by admin) |
+| Tap one → see their prices → **Send request**, optionally with **your own price offer** | Big **Go free / Go busy** switch |
 | Or **Ask everyone nearby** — first free driver to accept comes | Loud push + full-screen request ("A customer chose you!") |
 | Driver accepts → call each other, agree price, **4-digit ride PIN** | Accept → call customer → enter PIN to start → complete |
 | Pay the driver directly (cash / UPI), rate the driver | Rate customer, go free again |

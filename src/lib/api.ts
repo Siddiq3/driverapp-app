@@ -119,9 +119,14 @@ export async function setAvailability(available: boolean, position?: { lat: numb
   return data as Driver;
 }
 
-/** Driver's own rate shown on their card, e.g. "₹12/km · ₹900/day". */
-export async function setRateNote(note: string) {
-  const { error } = await supabase.rpc("set_driver_rate_note", { p_rate_note: note });
+/** Driver's own prices, shown to customers. At least one is needed. */
+export async function setRates(rates: { perKm: number | null; perHour: number | null; perDay: number | null; note: string }) {
+  const { error } = await supabase.rpc("set_driver_rates", {
+    p_per_km: rates.perKm,
+    p_per_hour: rates.perHour,
+    p_per_day: rates.perDay,
+    p_note: rates.note,
+  });
   if (error) fail(error);
 }
 
@@ -194,6 +199,8 @@ export async function requestTrip(args: {
   note: string;
   /** Send only to this driver (picked from the "free near me" list). */
   driverId?: string | null;
+  /** The price the customer offers (optional). */
+  offer?: number | null;
 }): Promise<{ trip_id: string; drivers_notified: number }> {
   return tripAction("request", {
     service: args.service,
@@ -208,6 +215,7 @@ export async function requestTrip(args: {
     hours: args.hours,
     note: args.note,
     driver_id: args.driverId ?? null,
+    offer: args.offer ?? null,
   });
 }
 

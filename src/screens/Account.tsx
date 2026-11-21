@@ -8,7 +8,7 @@ import { Avatar, RatingText } from "@/components/TripBits";
 import { confirm, openWhatsApp, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { VEHICLE_LABEL } from "@/lib/format";
+import { ratesText, VEHICLE_LABEL } from "@/lib/format";
 import type { UserRole } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
 
@@ -65,14 +65,17 @@ export function Account({ mode }: { mode: UserRole }) {
                 : "Driving only (no own car)"}
             </Text>
             <Text style={[font.small, { marginTop: 4 }]}>Licence: {driver.licence_number}</Text>
-            <Text style={[font.small, { marginTop: 4 }]}>Your rate: {driver.rate_note ?? "not set"}</Text>
+            <Text style={[font.small, { marginTop: 4 }]}>
+              Your prices: {ratesText(driver) || "not set"}
+              {driver.rate_note ? ` · ${driver.rate_note}` : ""}
+            </Text>
           </View>
         </>
       )}
 
       <SectionLabel>Settings</SectionLabel>
       <Row icon="create-outline" label="Edit name and phone" onPress={() => router.push("/setup?edit=1")} />
-      {mode === "driver" && <Row icon="car-outline" label="Edit car, licence or rate" onPress={() => router.push("/driver-register")} />}
+      {mode === "driver" && <Row icon="car-outline" label="Edit car, licence or prices" onPress={() => router.push("/driver-register")} />}
       <Row
         icon="swap-horizontal"
         label={mode === "driver" ? "Switch to booking trips" : "Switch to driver mode"}

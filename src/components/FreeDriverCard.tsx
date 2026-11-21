@@ -1,7 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Avatar, RatingText } from "@/components/TripBits";
-import { VEHICLE_LABEL } from "@/lib/format";
+import { ratesText, VEHICLE_LABEL } from "@/lib/format";
 import type { FreeDriver } from "@/lib/types";
 import { colors, font, radius, space } from "@/theme";
 
@@ -10,6 +10,13 @@ export function FreeDriverCard({ driver, onPress }: { driver: FreeDriver; onPres
   const what = driver.has_car
     ? [driver.vehicle_type ? VEHICLE_LABEL[driver.vehicle_type] : "Car", driver.vehicle_model].filter(Boolean).join(" · ")
     : "Driver only (for your car)";
+
+  // Show the prices that fit what the customer is looking for
+  const prices = ratesText({
+    rate_per_km: driver.has_car ? driver.rate_per_km : null,
+    rate_per_hour: driver.rate_per_hour,
+    rate_per_day: driver.rate_per_day,
+  });
 
   return (
     <Pressable
@@ -31,12 +38,12 @@ export function FreeDriverCard({ driver, onPress }: { driver: FreeDriver; onPres
         </View>
         <View style={styles.line}>
           <RatingText avg={driver.rating_avg} count={driver.rating_count} />
-          {driver.rate_note ? (
-            <Text style={styles.rate} numberOfLines={1}>
-              · {driver.rate_note}
-            </Text>
-          ) : null}
         </View>
+        {prices ? (
+          <Text style={styles.prices} numberOfLines={1}>
+            {prices}
+          </Text>
+        ) : null}
       </View>
       <View style={styles.right}>
         <Text style={styles.km}>{driver.distance_km} km</Text>
@@ -60,7 +67,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.border,
   },
   line: { flexDirection: "row", alignItems: "center", gap: 4, marginTop: 2 },
-  rate: { fontSize: 14, color: colors.textMuted, flexShrink: 1 },
+  prices: { fontSize: 15, fontWeight: "700", color: colors.green, marginTop: 2 },
   right: { alignItems: "flex-end", gap: space.sm },
   km: { fontSize: 14, fontWeight: "700", color: colors.text },
   requestBtn: { backgroundColor: colors.black, borderRadius: radius.pill, paddingHorizontal: space.md, paddingVertical: 8 },

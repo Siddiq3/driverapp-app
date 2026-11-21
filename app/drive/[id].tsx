@@ -11,7 +11,7 @@ import { Avatar, Route, Stars } from "@/components/TripBits";
 import { callNumber, confirm, navigateTo, showError } from "@/lib/alert";
 import * as api from "@/lib/api";
 import { useAuth } from "@/lib/auth";
-import { SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
+import { rupees, SERVICE_LABEL, TRIP_LABEL, VEHICLE_LABEL } from "@/lib/format";
 import { useOnAppActive } from "@/lib/hooks";
 import { getCurrentPosition } from "@/lib/location";
 import type { Trip, TripPerson } from "@/lib/types";
@@ -158,7 +158,9 @@ export default function DriverTrip() {
               <Avatar name={customer?.full_name} url={customer?.avatar_url} size={52} />
               <View style={{ flex: 1 }}>
                 <Text style={font.subheading}>{customer?.full_name ?? "Customer"}</Text>
-                <Text style={font.small}>Call to agree on price and time</Text>
+                <Text style={font.small}>
+                  {trip.customer_offer ? `Offered ${rupees(trip.customer_offer)} · confirm on call` : "Your prices · confirm on call"}
+                </Text>
               </View>
               <IconButton icon="call" label="Call customer" background={colors.black} color={colors.white} size={52} onPress={() => callNumber(customer?.phone)} />
             </View>

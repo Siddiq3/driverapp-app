@@ -38,6 +38,9 @@ export type Driver = {
   rating_count: number;
   missed_streak: number;
   rate_note: string | null;
+  rate_per_km: number | null;
+  rate_per_hour: number | null;
+  rate_per_day: number | null;
 };
 
 export type Trip = {
@@ -58,6 +61,7 @@ export type Trip = {
   fare_estimate: number;
   customer_note: string | null;
   requested_driver_id: string | null;
+  customer_offer: number | null;
   status: TripStatus;
   search_radius_km: number;
   expires_at: string;
@@ -106,6 +110,9 @@ export type FreeDriver = {
   rating_avg: number;
   rating_count: number;
   rate_note: string | null;
+  rate_per_km: number | null;
+  rate_per_hour: number | null;
+  rate_per_day: number | null;
   distance_km: number;
 };
 
