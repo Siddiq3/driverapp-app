@@ -3,6 +3,22 @@ import type { LatLng, Place } from "./types";
 
 export class LocationError extends Error {}
 
+export type LocationAccess = "granted" | "ask" | "blocked";
+
+/** Current permission without showing a popup. "blocked" = user must enable it in Settings. */
+export async function locationAccess(): Promise<LocationAccess> {
+  const p = await Location.getForegroundPermissionsAsync();
+  if (p.granted) return "granted";
+  return p.canAskAgain ? "ask" : "blocked";
+}
+
+/** Shows the system popup. */
+export async function askLocation(): Promise<LocationAccess> {
+  const p = await Location.requestForegroundPermissionsAsync();
+  if (p.granted) return "granted";
+  return p.canAskAgain ? "ask" : "blocked";
+}
+
 /** Asks for permission (once) and returns the phone's current position. */
 export async function getCurrentPosition(): Promise<LatLng> {
   const { status } = await Location.requestForegroundPermissionsAsync();

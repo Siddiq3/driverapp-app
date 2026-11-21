@@ -4,9 +4,8 @@ import { useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Button } from "@/components/Button";
-import { homeRouteFor, useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { showError } from "@/lib/alert";
-import * as api from "@/lib/api";
 import { colors, space } from "@/theme";
 
 export default function Welcome() {
@@ -17,9 +16,7 @@ export default function Welcome() {
     setBusy(true);
     try {
       await signInWithGoogle();
-      const [profile, driver] = await Promise.all([api.getMyProfile(), api.getMyDriver()]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace(homeRouteFor(profile, driver) as any);
+      router.replace("/"); // next: location permission, then setup / home
     } catch (err) {
       showError(err);
     } finally {

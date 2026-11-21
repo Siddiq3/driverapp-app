@@ -146,6 +146,18 @@ export async function estimateFare(args: {
 }
 
 // ---------------------------------------------------------------------------
+// Customer: free drivers near me (approximate positions only)
+// ---------------------------------------------------------------------------
+
+export type NearbyDriver = { lat: number; lng: number; has_car: boolean; vehicle_type: VehicleType | null };
+
+export async function getNearbyDrivers(lat: number, lng: number, radiusKm = 5): Promise<NearbyDriver[]> {
+  const { data, error } = await supabase.rpc("nearby_drivers", { p_lat: lat, p_lng: lng, p_radius_km: radiusKm });
+  if (error) fail(error);
+  return (data ?? []) as NearbyDriver[];
+}
+
+// ---------------------------------------------------------------------------
 // Customer: booking
 // ---------------------------------------------------------------------------
 

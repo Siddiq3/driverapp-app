@@ -1,3 +1,4 @@
+import { Ionicons } from "@expo/vector-icons";
 import { useEffect, useRef } from "react";
 import { StyleSheet, View } from "react-native";
 import MapView, { Marker, PROVIDER_GOOGLE, type MapViewProps } from "react-native-maps";
@@ -26,9 +27,11 @@ type Props = Omit<MapViewProps, "region" | "initialRegion"> & {
   drop?: LatLng | null;
   /** Leave room at the bottom for the sheet (pixels). */
   bottomInset?: number;
+  /** Free drivers near the customer (approximate positions). */
+  nearby?: { lat: number; lng: number; has_car: boolean }[];
 };
 
-export function Map({ center, pickup, drop, bottomInset = 0, style, ...rest }: Props) {
+export function Map({ center, pickup, drop, bottomInset = 0, nearby, style, ...rest }: Props) {
   const ref = useRef<MapView>(null);
   const focus = center ?? pickup ?? null;
 
@@ -72,6 +75,19 @@ export function Map({ center, pickup, drop, bottomInset = 0, style, ...rest }: P
       }}
       {...rest}
     >
+      {nearby?.map((d, i) => (
+        <Marker
+          key={`${d.lat},${d.lng},${i}`}
+          coordinate={{ latitude: d.lat, longitude: d.lng }}
+          anchor={{ x: 0.5, y: 0.5 }}
+          tracksViewChanges={false}
+          accessibilityLabel={d.has_car ? "Free car nearby" : "Free driver nearby"}
+        >
+          <View style={styles.nearby}>
+            <Ionicons name={d.has_car ? "car" : "person"} size={16} color={colors.white} />
+          </View>
+        </Marker>
+      ))}
       {pickup && (
         <Marker coordinate={{ latitude: pickup.lat, longitude: pickup.lng }} title="Pickup" tracksViewChanges={false}>
           <View style={styles.pickup} />
@@ -87,6 +103,16 @@ export function Map({ center, pickup, drop, bottomInset = 0, style, ...rest }: P
 }
 
 const styles = StyleSheet.create({
+  nearby: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    backgroundColor: colors.black,
+    borderWidth: 2,
+    borderColor: colors.white,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   pickup: {
     width: 22,
     height: 22,

@@ -7,7 +7,7 @@ import { Field } from "@/components/Field";
 import { Screen, SectionLabel } from "@/components/Screen";
 import { showError } from "@/lib/alert";
 import * as api from "@/lib/api";
-import { homeRouteFor, useAuth } from "@/lib/auth";
+import { useAuth } from "@/lib/auth";
 import { normalisePhone } from "@/lib/format";
 import type { UserRole } from "@/lib/types";
 import { font, space } from "@/theme";
@@ -41,9 +41,7 @@ export default function Setup() {
         router.back();
         return;
       }
-      const [p, d] = await Promise.all([api.getMyProfile(), api.getMyDriver()]);
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      router.replace(homeRouteFor(p, d) as any);
+      router.replace("/");
     } catch (err) {
       showError(err);
     } finally {

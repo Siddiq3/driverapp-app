@@ -48,6 +48,7 @@ export default function RootLayout() {
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: colors.white } }}>
           <Stack.Screen name="index" />
           <Stack.Screen name="welcome" options={{ gestureEnabled: false }} />
+          <Stack.Screen name="location" options={{ gestureEnabled: false }} />
           <Stack.Screen name="setup" />
           <Stack.Screen name="driver-register" />
           <Stack.Screen name="driver-pending" options={{ gestureEnabled: false }} />
