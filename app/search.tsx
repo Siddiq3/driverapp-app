@@ -135,7 +135,7 @@ export default function Search() {
             onChangeText={setDropText}
             onFocus={() => setField("drop")}
             autoFocus={field === "drop"}
-            placeholder={service === "driver_only" ? "Where are you going? (optional)" : "Where to?"}
+            placeholder="Where to?"
             placeholderTextColor={colors.textFaint}
             style={[styles.input, field === "drop" && styles.inputActive]}
             returnKeyType="search"
@@ -144,18 +144,17 @@ export default function Search() {
         </View>
       </View>
 
-      {service === "driver_only" && (
-        <Pressable
-          style={styles.skip}
-          onPress={() => {
-            bookingDraft.setDrop(null);
-            router.push("/ride?service=driver_only&nodrop=1");
-          }}
-          accessibilityRole="button"
-        >
-          <Text style={styles.skipText}>Skip — I'll tell the driver</Text>
-        </Pressable>
-      )}
+      <Pressable
+        style={styles.skip}
+        onPress={() => {
+          bookingDraft.setDrop(null);
+          router.push(`/ride?service=${service}`);
+        }}
+        accessibilityRole="button"
+      >
+        <Ionicons name="hourglass-outline" size={18} color={colors.blue} />
+        <Text style={styles.skipText}>No drop? Book by hours</Text>
+      </Pressable>
 
       <FlatList
         data={rows}
@@ -264,7 +263,7 @@ const styles = StyleSheet.create({
     borderColor: "transparent",
   },
   inputActive: { borderColor: colors.black, backgroundColor: colors.white },
-  skip: { alignSelf: "flex-end", paddingHorizontal: space.xl, paddingBottom: space.sm },
+  skip: { flexDirection: "row", alignItems: "center", gap: 6, alignSelf: "flex-end", paddingHorizontal: space.xl, paddingBottom: space.sm },
   skipText: { fontSize: 15, fontWeight: "700", color: colors.blue },
   row: { flexDirection: "row", alignItems: "center", gap: space.md, paddingHorizontal: space.xl, minHeight: 64 },
   rowIcon: {

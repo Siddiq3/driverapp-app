@@ -128,12 +128,11 @@ export default function CustomerHome() {
 
             {/* Services */}
             <View style={styles.services}>
-              <Service icon="car-sport" label="Ride" onPress={() => router.push("/search")} />
-              <Service icon="hourglass" label="Rental" hint="By hours" onPress={() => router.push("/rental")} />
+              <Service icon="car-sport" label="Car + driver" hint="We send a car" onPress={() => router.push("/search")} />
               <Service
                 icon="person"
-                label="Driver"
-                hint="For my car"
+                label="Driver only"
+                hint="For your own car"
                 onPress={() => router.push("/search?service=driver_only")}
               />
             </View>

@@ -6,12 +6,12 @@ Backend: [driverapp-backend](https://github.com/Siddiq3/driverapp-backend) (Supa
 
 ## What's inside
 
-| Customer (Uber / Rapido style) | Driver |
+| Customer (Uber / Rapido look, kept simple) | Driver |
 | --- | --- |
 | Google login → allow location → name + phone | Register licence (+ car details if they have a car) |
 | Home: map with free drivers, **Where are you going?**, recent places | Wait for approval (checked by admin) |
-| Shortcuts: **Ride** · **Rental** (by hours) · **Driver** (for my car) | Big **Go free / Go busy** switch |
-| Search as you type, recent places, or **choose on map** with a pin | Loud push + full-screen request card with 2-min timer |
+| Two big buttons: **Car + driver** · **Driver only** | Big **Go free / Go busy** switch |
+| Search as you type, recent places, **choose on map**, or **book by hours** (no drop) | Loud push + full-screen request card with 2-min timer |
 | Choose ride: Mini / Sedan / SUV / Driver only, with price and "3 min away" | First to accept gets the trip |
 | Live status, driver card, **4-digit ride PIN**, call, share, SOS | Enter the customer's PIN to start the trip |
 | Pay driver by cash / UPI, rate the driver | Navigate in Google Maps, complete, rate customer, go free again |
@@ -28,7 +28,6 @@ app/                    screens (expo-router: file = screen)
   search.tsx            "Where to?" with suggestions + recent places
   pick-on-map.tsx       choose a place by moving the map
   ride.tsx              choose Mini / Sedan / SUV / Driver only, then book
-  rental.tsx            book by hours
   trip/[id].tsx         customer's live trip
   drive/[id].tsx        driver's live trip
 src/

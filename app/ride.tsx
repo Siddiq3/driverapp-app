@@ -49,7 +49,10 @@ export default function Ride() {
 
   const options = onlyDriver ? [DRIVER_OPTION] : [...CAR_OPTIONS, DRIVER_OPTION];
   const km = useMemo(() => (pickup && drop ? roadKm(pickup, drop) : null), [pickup, drop]);
-  const tripType: TripType = km != null && km > OUTSTATION_KM ? "outstation" : "local";
+  // No drop chosen = keep the car / driver for some hours
+  const byHours = !drop;
+  const tripType: TripType = byHours ? "hourly" : km != null && km > OUTSTATION_KM ? "outstation" : "local";
+  const needsHours = (o: Option) => byHours || o.service === "driver_only";
 
   const [selected, setSelected] = useState<OptionKey>(onlyDriver ? "driver" : "hatchback");
   const [hours, setHours] = useState(() => (km ? Math.min(Math.max(Math.ceil(km / 30) + 2, 2), 24) : 4));
@@ -78,7 +81,7 @@ export default function Ride() {
             tripType,
             vehicle: o.vehicle,
             distanceKm: km,
-            hours: o.service === "driver_only" ? hours : null,
+            hours: needsHours(o) ? hours : null,
           })
           .then((f) => [o.key, f] as const)
           .catch(() => [o.key, undefined] as const),
@@ -117,11 +120,11 @@ export default function Ride() {
     try {
       const res = await api.requestTrip({
         service: chosen.service,
-        tripType: chosen.service === "driver_only" ? (tripType === "outstation" ? "outstation" : "local") : tripType,
+        tripType,
         vehicle: chosen.vehicle,
         pickup,
         drop,
-        hours: chosen.service === "driver_only" ? hours : null,
+        hours: needsHours(chosen) ? hours : null,
         note,
       });
       try {
@@ -153,7 +156,7 @@ export default function Ride() {
 
       <BottomSheet style={{ maxHeight: "68%" }}>
         <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
-          <Text style={[font.heading, { marginBottom: space.md }]}>Choose a ride</Text>
+          <Text style={[font.heading, { marginBottom: space.md }]}>{byHours ? "Book by hours" : "Choose a ride"}</Text>
 
           {options.map((o) => {
             const active = o.key === selected;
@@ -185,9 +188,11 @@ export default function Ride() {
             );
           })}
 
-          {chosen.service === "driver_only" && (
+          {needsHours(chosen) && (
             <View style={{ marginTop: space.sm }}>
-              <Text style={[font.small, { marginBottom: space.sm }]}>How long do you need the driver?</Text>
+              <Text style={[font.small, { marginBottom: space.sm }]}>
+                {byHours ? "How many hours? Go to as many places as you like." : "How long do you need the driver?"}
+              </Text>
               <Stepper value={hours} onChange={setHours} min={1} max={72} unit="hours" />
             </View>
           )}
