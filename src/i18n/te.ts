@@ -129,7 +129,6 @@ export const te: Record<string, string> = {
   "Car model": "కారు మోడల్",
   "Car number": "కారు నంబర్",
   "e.g. Maruti Dzire": "ఉదా. Maruti Dzire",
-  "Enter your car number, e.g. AP39AB1234": "మీ కారు నంబర్ రాయండి, ఉదా. AP39AB1234",
   "Your prices": "మీ ధరలు",
   "Customers see these on your card. They can also offer their own price — you decide.":
     "కస్టమర్లు ఇవి మీ కార్డ్‌పై చూస్తారు. వారు కూడా వారి ధర చెప్పవచ్చు — నిర్ణయం మీదే.",
@@ -348,7 +347,6 @@ export const te: Record<string, string> = {
   "A car or a driver,\nin a few minutes.": "కారు లేదా డ్రైవర్,\nకొన్ని నిమిషాల్లో.",
   "Hi {name}": "నమస్కారం {name}",
   "Version {v}": "వెర్షన్ {v}",
-  "Our team may call you to see your licence, RC and insurance before approving.": "ఆమోదించే ముందు మీ లైసెన్స్, RC మరియు ఇన్సూరెన్స్ చూడటానికి మా టీమ్ కాల్ చేయవచ్చు.",
   "Our team may call you to see your licence before approving.": "ఆమోదించే ముందు మీ లైసెన్స్ చూడటానికి మా టీమ్ కాల్ చేయవచ్చు.",
 
   "Delete your account?": "మీ ఖాతాను తొలగించాలా?",
@@ -384,4 +382,22 @@ export const te: Record<string, string> = {
   "Car type and number are required": "కారు రకం మరియు నంబర్ అవసరం",
   "Rating must be 1 to 5 stars": "రేటింగ్ 1 నుండి 5 స్టార్లు ఉండాలి",
   "No fare set for this booking type yet": "ఈ బుకింగ్ రకానికి ఇంకా ధర సెట్ చేయలేదు",
+  // Commercial-plate rule for car listings
+  "Enter your car number, e.g. AP39TA1234": "మీ కారు నంబర్ రాయండి, ఉదా. AP39TA1234",
+  "Our team may call you to see your licence, RC, permit and insurance before approving.": "ఆమోదించే ముందు మీ లైసెన్స్, RC, పర్మిట్ మరియు ఇన్సూరెన్స్ చూడటానికి మా టీమ్ కాల్ చేయవచ్చు.",
+  "Choose your number plate colour": "మీ నంబర్ ప్లేట్ రంగు ఎంచుకోండి",
+  "Enter your taxi permit number": "మీ టాక్సీ పర్మిట్ నంబర్ రాయండి",
+  "Number plate colour": "నంబర్ ప్లేట్ రంగు",
+  "Yellow plate": "పసుపు ప్లేట్",
+  "Taxi or tourist car with a permit": "పర్మిట్ ఉన్న టాక్సీ లేదా టూరిస్ట్ కారు",
+  "White plate": "తెల్ల ప్లేట్",
+  "Private car": "సొంత (ప్రైవేట్) కారు",
+  "Private cars can't be used for paid rides": "ప్రైవేట్ కార్లను డబ్బు తీసుకునే రైడ్‌లకు వాడకూడదు",
+  "The law allows paid rides only in yellow-plate cars with a permit. You can still join and drive customers' own cars.": "చట్టం ప్రకారం పర్మిట్ ఉన్న పసుపు ప్లేట్ కార్లలో మాత్రమే డబ్బు తీసుకుని రైడ్ ఇవ్వొచ్చు. మీరు ఇంకా చేరి, కస్టమర్ల సొంత కార్లు నడపవచ్చు.",
+  "Join without my car": "నా కారు లేకుండా చేరండి",
+  "e.g. AP39TA1234": "ఉదా. AP39TA1234",
+  "Taxi permit number": "టాక్సీ పర్మిట్ నంబర్",
+  "As written on your permit": "మీ పర్మిట్‌పై ఉన్నట్లుగా",
+  "Only cars with a yellow (commercial) number plate can be listed": "పసుపు (కమర్షియల్) నంబర్ ప్లేట్ ఉన్న కార్లను మాత్రమే చేర్చవచ్చు",
+  "Taxi permit number is required": "టాక్సీ పర్మిట్ నంబర్ అవసరం",
 };

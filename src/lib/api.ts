@@ -100,6 +100,10 @@ export async function registerDriver(input: {
   vehicleModel: string;
   vehicleNumber: string;
   licenceNumber: string;
+  /** Yellow (commercial) number plate. Required when hasCar. */
+  commercialPlate: boolean;
+  /** Taxi / tourist permit number. Required when hasCar. */
+  permitNumber: string;
 }): Promise<Driver> {
   const { data, error } = await supabase.rpc("register_driver", {
     p_has_car: input.hasCar,
@@ -107,6 +111,8 @@ export async function registerDriver(input: {
     p_vehicle_model: input.vehicleModel,
     p_vehicle_number: input.vehicleNumber,
     p_licence_number: input.licenceNumber,
+    p_commercial_plate: input.hasCar && input.commercialPlate,
+    p_permit_number: input.hasCar ? input.permitNumber : null,
   });
   if (error) fail(error);
   return data as Driver;

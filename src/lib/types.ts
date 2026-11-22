@@ -33,6 +33,8 @@ export type Driver = {
   vehicle_model: string | null;
   vehicle_number: string | null;
   licence_number: string;
+  commercial_plate: boolean;
+  permit_number: string | null;
   status: DriverStatus;
   is_available: boolean;
   rating_avg: number;

@@ -128,7 +128,6 @@ export const hi: Record<string, string> = {
   "Car model": "कार मॉडल",
   "Car number": "कार नंबर",
   "e.g. Maruti Dzire": "जैसे Maruti Dzire",
-  "Enter your car number, e.g. AP39AB1234": "अपनी कार का नंबर लिखें, जैसे AP39AB1234",
   "Your prices": "आपके रेट",
   "Customers see these on your card. They can also offer their own price — you decide.":
     "ग्राहक ये आपके कार्ड पर देखते हैं। वे अपना दाम भी बता सकते हैं — फ़ैसला आपका।",
@@ -347,7 +346,6 @@ export const hi: Record<string, string> = {
   "A car or a driver,\nin a few minutes.": "कार या ड्राइवर,\nकुछ ही मिनटों में।",
   "Hi {name}": "नमस्ते {name}",
   "Version {v}": "वर्ज़न {v}",
-  "Our team may call you to see your licence, RC and insurance before approving.": "मंज़ूरी से पहले आपका लाइसेंस, RC और बीमा देखने के लिए हमारी टीम फ़ोन कर सकती है।",
   "Our team may call you to see your licence before approving.": "मंज़ूरी से पहले आपका लाइसेंस देखने के लिए हमारी टीम फ़ोन कर सकती है।",
 
   "Delete your account?": "अपना खाता हटाएँ?",
@@ -383,4 +381,22 @@ export const hi: Record<string, string> = {
   "Car type and number are required": "कार का प्रकार और नंबर ज़रूरी है",
   "Rating must be 1 to 5 stars": "रेटिंग 1 से 5 स्टार होनी चाहिए",
   "No fare set for this booking type yet": "इस बुकिंग के लिए अभी रेट तय नहीं है",
+  // Commercial-plate rule for car listings
+  "Enter your car number, e.g. AP39TA1234": "अपनी कार का नंबर लिखें, जैसे AP39TA1234",
+  "Our team may call you to see your licence, RC, permit and insurance before approving.": "मंज़ूरी से पहले आपका लाइसेंस, RC, परमिट और बीमा देखने के लिए हमारी टीम फ़ोन कर सकती है।",
+  "Choose your number plate colour": "अपनी नंबर प्लेट का रंग चुनें",
+  "Enter your taxi permit number": "अपना टैक्सी परमिट नंबर लिखें",
+  "Number plate colour": "नंबर प्लेट का रंग",
+  "Yellow plate": "पीली प्लेट",
+  "Taxi or tourist car with a permit": "परमिट वाली टैक्सी या टूरिस्ट कार",
+  "White plate": "सफ़ेद प्लेट",
+  "Private car": "निजी कार",
+  "Private cars can't be used for paid rides": "निजी कार से पैसे लेकर सवारी नहीं ढो सकते",
+  "The law allows paid rides only in yellow-plate cars with a permit. You can still join and drive customers' own cars.": "कानून के अनुसार पैसे लेकर सवारी सिर्फ़ परमिट वाली पीली प्लेट की कार में ही दी जा सकती है। आप फिर भी जुड़ सकते हैं और ग्राहकों की अपनी कार चला सकते हैं।",
+  "Join without my car": "अपनी कार के बिना जुड़ें",
+  "e.g. AP39TA1234": "जैसे AP39TA1234",
+  "Taxi permit number": "टैक्सी परमिट नंबर",
+  "As written on your permit": "जैसा आपके परमिट पर लिखा है",
+  "Only cars with a yellow (commercial) number plate can be listed": "सिर्फ़ पीली (कमर्शियल) नंबर प्लेट वाली कारें जोड़ी जा सकती हैं",
+  "Taxi permit number is required": "टैक्सी परमिट नंबर ज़रूरी है",
 };
